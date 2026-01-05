@@ -1,6 +1,6 @@
 [versions]
-kotlin = "2.2.21"
-ktor = "3.3.2"
+kotlin = "2.2.20"
+ktor = "3.3.3"
 logback = "1.5.13"
 
 [libraries]
@@ -11,6 +11,7 @@ ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref ="ktor"}
 ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-swagger = { module = "io.ktor:ktor-server-swagger", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 
 [plugins]

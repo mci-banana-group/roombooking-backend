@@ -6,6 +6,7 @@ import edu.mci.routes.room.roomRoutes
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 
@@ -21,6 +22,7 @@ fun Application.module() {
 
 private fun Application.configureRouting() {
     routing {
+        swaggerUI(path = "/swagger", swaggerFile = "openapi/open-api.json")
         roomRoutes()
         bookingRoutes()
         buildingRoutes()
