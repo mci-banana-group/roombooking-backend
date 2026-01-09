@@ -1,5 +1,7 @@
 package edu.mci
 
+import edu.mci.plugins.configureDatabases
+import edu.mci.plugins.seedData
 import io.ktor.server.application.*
 
 fun main(args: Array<String>) {
@@ -7,5 +9,7 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
+    configureDatabases()
+    seedData()
     configureRouting()
 }
