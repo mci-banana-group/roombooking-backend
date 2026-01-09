@@ -13,6 +13,10 @@ fun Application.configureDatabases() {
         driver = "org.h2.Driver",
         password = ""
     )
+
+    // Start H2 Web Console
+    org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start()
+
     
     transaction(database) {
         SchemaUtils.create(
