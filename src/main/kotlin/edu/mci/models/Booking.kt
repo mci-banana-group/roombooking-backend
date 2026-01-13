@@ -6,14 +6,6 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.kotlin.datetime.datetime
 
-enum class BookingStatus {
-    RESERVED, CANCELLED, CHECKED_IN, NO_SHOW
-}
-
-enum class ConfirmationMethod {
-    QR_CODE, NFC, MOTION
-}
-
 object Bookings : IntIdTable() {
     val start = datetime("start")
     val end = datetime("end")
@@ -42,16 +34,6 @@ class Booking(id: EntityID<Int>) : IntEntity(id) {
     val notifications by Notification referrersOn Notifications.booking
 }
 
-object PresenceConfirmations : IntIdTable() {
-    val timestamp = datetime("timestamp")
-    val method = enumerationByName("method", 20, ConfirmationMethod::class)
-    val booking = reference("booking_id", Bookings)
-}
-
-class PresenceConfirmation(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<PresenceConfirmation>(PresenceConfirmations)
-
-    var timestamp by PresenceConfirmations.timestamp
-    var method by PresenceConfirmations.method
-    var booking by Booking referencedOn PresenceConfirmations.booking
+enum class BookingStatus {
+    RESERVED, CANCELLED, CHECKED_IN, NO_SHOW
 }

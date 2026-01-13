@@ -6,10 +6,6 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.kotlin.datetime.datetime
 
-enum class NotificationChannel {
-    EMAIL, PUSH
-}
-
 object Notifications : IntIdTable() {
     val sentAt = datetime("sent_at")
     val message = varchar("message", 255)
@@ -28,4 +24,8 @@ class Notification(id: EntityID<Int>) : IntEntity(id) {
     
     var user by User referencedOn Notifications.user
     var booking by Booking referencedOn Notifications.booking
+}
+
+enum class NotificationChannel {
+    EMAIL, PUSH
 }

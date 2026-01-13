@@ -5,14 +5,6 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 
-enum class Role {
-    STUDENT, LECTURER, STAFF
-}
-
-enum class PermissionLevel {
-    USER, MODERATOR, ADMIN
-}
-
 object Users : IntIdTable() {
     val email = varchar("email", 255).uniqueIndex()
     val firstName = varchar("first_name", 50)
@@ -29,4 +21,12 @@ class User(id: EntityID<Int>) : IntEntity(id) {
     var lastName by Users.lastName
     var permissionLevel by Users.permissionLevel
     var role by Users.role
+}
+
+enum class Role {
+    STUDENT, LECTURER, STAFF
+}
+
+enum class PermissionLevel {
+    USER, MODERATOR, ADMIN
 }
