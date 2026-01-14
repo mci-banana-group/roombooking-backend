@@ -1,4 +1,4 @@
-package edu.mci.model.dto
+package edu.mci.model.api.request
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -8,5 +8,5 @@ data class CreateBookingRequest(
     val start: Instant,
     val end: Instant,
     val description: String,
-    val roomNumber: Int,
+    val roomId: Int,
 )

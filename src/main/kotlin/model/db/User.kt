@@ -1,5 +1,7 @@
 package edu.mci.model.db
 
+import edu.mci.model.api.response.MciRole
+import edu.mci.model.api.response.UserResponse
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -22,6 +24,19 @@ class User(id: EntityID<Int>) : IntEntity(id) {
     var permissionLevel by Users.permissionLevel
     var role by Users.role
 }
+
+fun User.toResponse() = UserResponse(
+    firstName = this.firstName,
+    lastName = this.lastName,
+    email = this.email,
+    role = this.role?.let {
+        when (it) {
+            Role.STUDENT -> MciRole.STUDENT
+            Role.LECTURER -> MciRole.LECTURER
+            Role.STAFF -> MciRole.STAFF
+        }
+    }
+)
 
 enum class Role {
     STUDENT, LECTURER, STAFF

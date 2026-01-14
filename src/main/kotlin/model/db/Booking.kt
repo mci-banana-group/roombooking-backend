@@ -1,5 +1,8 @@
 package edu.mci.model.db
 
+import edu.mci.model.api.response.BookingResponse
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -38,3 +41,11 @@ enum class BookingStatus {
     RESERVED, CANCELLED, CHECKED_IN, NO_SHOW
 }
 
+fun Booking.toResponse() = BookingResponse(
+    id = this.id.value,
+    user = this.user.toResponse(),
+    start = this.start.toInstant(TimeZone.UTC),
+    end = this.end.toInstant(TimeZone.UTC),
+    gracePeriodMin = this.gracePeriodMin,
+    description = this.description,
+)

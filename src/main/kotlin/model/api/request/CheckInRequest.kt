@@ -1,9 +1,9 @@
-package edu.mci.model.dto
+package edu.mci.model.api.request
 
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class CheckInRequest(
-    val bookingId: Long,
+    val bookingId: Int,
     val code: String,
 )

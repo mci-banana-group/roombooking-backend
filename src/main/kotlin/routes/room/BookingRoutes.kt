@@ -1,61 +1,134 @@
 package edu.mci.routes.room
 
-import edu.mci.model.dto.CheckInRequest
-import edu.mci.model.dto.CreateBookingRequest
+import edu.mci.model.api.request.CheckInRequest
+import edu.mci.model.api.request.CreateBookingRequest
+import edu.mci.service.BookingService
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Route.bookingRoutes() {
+fun Route.bookingRoutes(bookingService: BookingService) {
     route("/bookings") {
-        get("/me") {
-            // TODO only get bookings from authenticated user
+        val mockUserId = 2 // Using userId 2 (lecturer from seed) as mock authenticated user
 
-            call.respondText(text = "Your Bookings: not implemented yet.", status = HttpStatusCode.OK)
+        get("/me") {
+            runCatching {
+                bookingService.getBookingsForUser(mockUserId)
+            }.onSuccess { bookings ->
+                call.respond(bookings)
+            }.onFailure { e ->
+                call.respondText(e.message ?: "Internal Server Error", status = HttpStatusCode.InternalServerError)
+            }
         }
 
         post {
+            runCatching {
+                val request = call.receive<CreateBookingRequest>()
+                bookingService.createBooking(mockUserId, request)
+            }.onSuccess { booking ->
+                call.respond(HttpStatusCode.Created, booking)
+            }.onFailure { e ->
+                when (e) {
+                    is IllegalArgumentException -> call.respondText(
+                        e.message ?: "Bad Request",
+                        status = HttpStatusCode.BadRequest
+                    )
 
-
-            call.respondText(
-                text = "Booking Created Successfully: not implemented yet.",
-                status = HttpStatusCode.Created
-            )
+                    else -> call.respondText(
+                        e.message ?: "Internal Server Error",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
+            }
         }
 
         put("/{bookingId}") {
-            val bookingId = runCatching { call.pathParameters["bookingId"] }.getOrNull()
-            val editedBooking = runCatching { call.receive<CreateBookingRequest>() }.getOrNull()
+            val bookingId = call.parameters["bookingId"]?.toIntOrNull()
+            if (bookingId == null) {
+                call.respondText(text = "Invalid Booking ID", status = HttpStatusCode.BadRequest)
+                return@put
+            }
 
-            if (editedBooking == null) {
-                call.respondText(text = "Malformed Body", status = HttpStatusCode.BadRequest)
-            } else {
-                // TODO: fetch existing booking from db to compare userId (could also expose the userId to clients and back, to avoid db request)
-                call.respondText(text = "Booking Updated Successfully.", status = HttpStatusCode.Accepted)
+            runCatching {
+                val request = call.receive<CreateBookingRequest>()
+                bookingService.updateBooking(mockUserId, bookingId, request)
+            }.onSuccess { updatedBooking ->
+                call.respond(HttpStatusCode.Accepted, updatedBooking)
+            }.onFailure { e ->
+                when (e) {
+                    is IllegalArgumentException -> call.respondText(
+                        e.message ?: "Not Found",
+                        status = HttpStatusCode.NotFound
+                    )
+
+                    is IllegalAccessException -> call.respondText(
+                        e.message ?: "Forbidden",
+                        status = HttpStatusCode.Forbidden
+                    )
+
+                    else -> call.respondText(
+                        e.message ?: "Internal Server Error",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
             }
         }
 
         delete("/{bookingId}") {
-            val bookingId = runCatching { call.pathParameters["bookingId"] }.getOrNull()
-
+            val bookingId = call.parameters["bookingId"]?.toIntOrNull()
             if (bookingId == null) {
-                call.respondText(text = "Malformed Request", status = HttpStatusCode.BadRequest)
-            } else {
-                // TODO: fetch existing booking from db to compare userId and delete
-                call.respond(Unit)
+                call.respondText(text = "Invalid Booking ID", status = HttpStatusCode.BadRequest)
+                return@delete
+            }
+
+            runCatching {
+                bookingService.deleteBooking(mockUserId, bookingId)
+            }.onSuccess {
+                call.respond(HttpStatusCode.NoContent)
+            }.onFailure { e ->
+                when (e) {
+                    is IllegalArgumentException -> call.respondText(
+                        e.message ?: "Not Found",
+                        status = HttpStatusCode.NotFound
+                    )
+
+                    is IllegalAccessException -> call.respondText(
+                        e.message ?: "Forbidden",
+                        status = HttpStatusCode.Forbidden
+                    )
+
+                    else -> call.respondText(
+                        e.message ?: "Internal Server Error",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
             }
         }
 
         post("/checkin") {
-            val checkInRequest = runCatching { call.receive<CheckInRequest>() }.getOrNull()
+            runCatching {
+                val checkInRequest = call.receive<CheckInRequest>()
+                bookingService.checkIn(mockUserId, checkInRequest)
+            }.onSuccess {
+                call.respond(HttpStatusCode.OK)
+            }.onFailure { e ->
+                when (e) {
+                    is IllegalArgumentException -> call.respondText(
+                        e.message ?: "Not Found",
+                        status = HttpStatusCode.NotFound
+                    )
 
-            if (checkInRequest == null) {
-                call.respondText(text = "Bad Request", status = HttpStatusCode.BadRequest)
-            } else {
-                // TODO: check userID matching with user from booking etc.
+                    is IllegalAccessException -> call.respondText(
+                        e.message ?: "Forbidden",
+                        status = HttpStatusCode.Forbidden
+                    )
 
-                call.respond(Unit)
+                    else -> call.respondText(
+                        e.message ?: "Internal Server Error",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
             }
         }
     }

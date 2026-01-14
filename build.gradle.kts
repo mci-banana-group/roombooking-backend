@@ -3,6 +3,7 @@ import io.ktor.plugin.OpenApiPreview
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 group = "edu.mci"
@@ -57,4 +58,5 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization)
     implementation(libs.ktor.server.swagger)
+    implementation(libs.ktor.server.call.logging)
 }
