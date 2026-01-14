@@ -8,6 +8,7 @@ data class RoomResponse(
     val roomNumber: Int, // unique
     val name: String,
     val description: String,
+    val status: String,
     val capacity: Int,
     val equipment: List<EquipmentResponse>,
 )

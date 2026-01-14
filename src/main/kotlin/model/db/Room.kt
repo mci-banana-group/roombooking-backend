@@ -39,6 +39,7 @@ fun Room.toResponse() = RoomResponse(
     roomNumber = this.roomNumber,
     name = this.name,
     description = this.description,
+    status = this.status.name,
     capacity = this.capacity,
     equipment = this.equipment.map {
         EquipmentResponse(

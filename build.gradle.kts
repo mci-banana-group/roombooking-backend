@@ -1,4 +1,4 @@
-import io.ktor.plugin.OpenApiPreview
+import io.ktor.plugin.*
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -20,10 +20,9 @@ ktor {
     openApi {
         title = "MCI Roombooking"
         version = "0.1"
-        summary = "API for the clients implementing MCI Roombooking"
-        description = "baseUrl: baaaaseURL"
-        termsOfService = "https://example.com/terms/"
-        contact = "contact@example.com"
+        summary =
+            "IMPORTANT: Timestamps start/end are in Strings in ISO-8601: 2026-01-14T12:34:56Z --- !they aren't objects! it's just wrongly parsed by the open api generator"
+        description = "baseUrl: https://roombooking-backend-l7kv.onrender.com"
         license = "Apache/1.0"
 
         // Location of the generated specification (defaults to openapi/generated.json)

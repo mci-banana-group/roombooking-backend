@@ -47,5 +47,6 @@ fun Booking.toResponse() = BookingResponse(
     start = this.start.toInstant(TimeZone.UTC),
     end = this.end.toInstant(TimeZone.UTC),
     gracePeriodMin = this.gracePeriodMin,
+    status = this.status.name,
     description = this.description,
 )
