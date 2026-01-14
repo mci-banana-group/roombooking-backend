@@ -1,4 +1,4 @@
-package edu.mci.models
+package edu.mci.model.db
 
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass

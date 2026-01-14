@@ -1,4 +1,4 @@
-package edu.mci.models
+package edu.mci.model.db
 
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -13,7 +13,7 @@ object Bookings : IntIdTable() {
     val gracePeriodMin = integer("grace_period_min")
     val status = enumerationByName("status", 20, BookingStatus::class)
     val description = varchar("description", 255)
-    
+
     val user = reference("user_id", Users)
     val room = reference("room_id", Rooms)
 }
@@ -27,7 +27,7 @@ class Booking(id: EntityID<Int>) : IntEntity(id) {
     var gracePeriodMin by Bookings.gracePeriodMin
     var status by Bookings.status
     var description by Bookings.description
-    
+
     var user by User referencedOn Bookings.user
     var room by Room referencedOn Bookings.room
     val confirmations by PresenceConfirmation referrersOn PresenceConfirmations.booking
@@ -37,3 +37,4 @@ class Booking(id: EntityID<Int>) : IntEntity(id) {
 enum class BookingStatus {
     RESERVED, CANCELLED, CHECKED_IN, NO_SHOW
 }
+

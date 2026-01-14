@@ -1,7 +1,7 @@
 package edu.mci.routes.room
 
-import edu.mci.model.dto.CheckInDto
-import edu.mci.model.dto.CreateBookingDto
+import edu.mci.model.dto.CheckInRequest
+import edu.mci.model.dto.CreateBookingRequest
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -26,7 +26,7 @@ fun Route.bookingRoutes() {
 
         put("/{bookingId}") {
             val bookingId = runCatching { call.pathParameters["bookingId"] }.getOrNull()
-            val editedBooking = runCatching { call.receive<CreateBookingDto>() }.getOrNull()
+            val editedBooking = runCatching { call.receive<CreateBookingRequest>() }.getOrNull()
 
             if (editedBooking == null) {
                 call.respondText(text = "Malformed Body", status = HttpStatusCode.BadRequest)
@@ -48,7 +48,7 @@ fun Route.bookingRoutes() {
         }
 
         post("/checkin") {
-            val checkInRequest = runCatching { call.receive<CheckInDto>() }.getOrNull()
+            val checkInRequest = runCatching { call.receive<CheckInRequest>() }.getOrNull()
 
             if (checkInRequest == null) {
                 call.respondText(text = "Bad Request", status = HttpStatusCode.BadRequest)

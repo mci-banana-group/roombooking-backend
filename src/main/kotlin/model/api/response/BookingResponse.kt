@@ -1,12 +1,13 @@
-package edu.mci.model.dto
+package edu.mci.model.api.response
 
-import java.time.Instant
+
+import kotlinx.datetime.Instant
 import kotlinx.serialization.*
 
 @Serializable
-data class BookingDto(
+data class BookingResponse(
     val id: Int,
-    val user: UserDto,
+    val user: UserResponse,
     val start: Instant,
     val end: Instant,
     val gracePeriodMin: Int,

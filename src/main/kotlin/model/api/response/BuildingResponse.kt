@@ -1,10 +1,9 @@
-package edu.mci.model.dto
+package edu.mci.model.api.response
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class EquipmentDto(
+data class BuildingResponse(
     val id: Long,
     val name: String,
-    val description: String,
 )

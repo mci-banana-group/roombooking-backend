@@ -1,13 +1,13 @@
-package edu.mci.model.dto
+package edu.mci.model.api.response
 
 import kotlinx.serialization.*
 
 @Serializable
-data class UserDto(
+data class UserResponse(
     val firstName: String,
     val lastName: String,
     val email: String,
-    val role: MciRole,
+    val role: MciRole?,
 )
 
 @Serializable
