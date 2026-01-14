@@ -4,6 +4,8 @@ import edu.mci.routes.room.bookingRoutes
 import edu.mci.routes.room.buildingRoutes
 import edu.mci.routes.room.roomRoutes
 import io.ktor.serialization.kotlinx.json.*
+import edu.mci.plugins.configureDatabases
+import edu.mci.plugins.seedData
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.swagger.swaggerUI
@@ -15,6 +17,8 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
+    configureDatabases()
+    seedData()
     configureRouting()
     configureSerialization()
 }
