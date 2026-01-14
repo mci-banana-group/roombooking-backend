@@ -1,21 +1,19 @@
 package edu.mci
 
-import edu.mci.repository.BookingRepositoryImpl
-import edu.mci.repository.EquipmentRepositoryImpl
-import edu.mci.repository.RoomRepositoryImpl
-import edu.mci.repository.UserRepositoryImpl
+import edu.mci.plugins.configureDatabases
+import edu.mci.plugins.seedData
+import edu.mci.repository.*
 import edu.mci.routes.room.bookingRoutes
 import edu.mci.routes.room.buildingRoutes
 import edu.mci.routes.room.roomRoutes
 import edu.mci.service.BookingService
+import edu.mci.service.BuildingService
 import edu.mci.service.RoomService
 import io.ktor.serialization.kotlinx.json.*
-import edu.mci.plugins.configureDatabases
-import edu.mci.plugins.seedData
 import io.ktor.server.application.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.swagger.swaggerUI
+import io.ktor.server.plugins.swagger.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
@@ -36,10 +34,11 @@ fun Application.module() {
     val roomRepository = RoomRepositoryImpl()
     val userRepository = UserRepositoryImpl()
     val equipmentRepository = EquipmentRepositoryImpl()
+    val buildingRepository = BuildingRepositoryImpl()
     val bookingService = BookingService(bookingRepository, roomRepository, userRepository)
     val roomService = RoomService(roomRepository, bookingRepository, equipmentRepository)
-
-    configureRouting(bookingService, roomService)
+    val buildingService = BuildingService(buildingRepository)
+    configureRouting(bookingService, roomService, buildingService)
 }
 
 private fun Application.configureMonitoring() {
@@ -50,12 +49,16 @@ private fun Application.configureMonitoring() {
 }
 
 
-private fun Application.configureRouting(bookingService: BookingService, roomService: RoomService) {
+private fun Application.configureRouting(
+    bookingService: BookingService,
+    roomService: RoomService,
+    buildingService: BuildingService
+) {
     routing {
         swaggerUI(path = "/swagger", swaggerFile = "openapi/open-api.json")
         roomRoutes(roomService)
         bookingRoutes(bookingService)
-        buildingRoutes()
+        buildingRoutes(buildingService)
     }
 }
 
