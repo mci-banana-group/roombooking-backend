@@ -1,35 +1,47 @@
 package edu.mci.routes.room
 
-import edu.mci.model.api.response.EquipmentResponse
+import edu.mci.service.RoomService
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.datetime.LocalDate
 
-fun Route.roomRoutes() {
-
+fun Route.roomRoutes(roomService: RoomService) {
 
     route("/rooms") {
         get {
-            // returns all rooms with matching filters and bookings for given date. Returns RoomWithBookingsDTO
+            // returns all rooms with matching filters and bookings for given date. Returns RoomWithBookingsResponse
             val queryParameters = call.request.queryParameters
-            val capacity = runCatching { queryParameters["capacity"] }.getOrNull()
-            val equipment = runCatching { queryParameters["equipment"] }.getOrNull()
-            val buildingId = runCatching { queryParameters["buildingId"] }.getOrNull()
-            val dateForBookings = runCatching { queryParameters["date"] }.getOrNull() // do not fetch bookings if null
+            val capacity = runCatching {
+                queryParameters["capacity"]?.toInt()
+            }.onFailure {
+                call.respond(HttpStatusCode.BadRequest, "capacity has to be an integer")
+                return@get
+            }.getOrThrow()
 
-            // TODO: only return bookings where booking status == RESERVED or == CONFIRMED
+            val equipment = queryParameters["equipment"]?.split(",") ?: emptyList()
+            val buildingId = queryParameters["buildingId"]?.toIntOrNull()
+            val date = queryParameters["date"]?.let { LocalDate.parse(it) }
 
-            call.respondText(
-                text = "Rooms with capacity: $capacity \n equipment: $equipment \n buildingId: $buildingId",
-                status = HttpStatusCode.OK
+            val rooms = roomService.getAllRooms(
+                capacity = capacity,
+                buildingId = buildingId,
+                date = date,
+                requiredEquipment = equipment
             )
+
+            call.respond(rooms)
         }
 
         get("/equipment") {
-            call.respond(
-                status = HttpStatusCode.OK,
-                message = listOf<EquipmentResponse>(),
-            )
+            val buildingId = call.request.queryParameters["buildingId"]?.toIntOrNull()
+            if (buildingId == null) {
+                call.respond(HttpStatusCode.BadRequest, "Missing or invalid buildingId")
+                return@get
+            }
+
+            val equipment = roomService.getAllEquipmentForBuilding(buildingId)
+            call.respond(equipment)
         }
     }
 }

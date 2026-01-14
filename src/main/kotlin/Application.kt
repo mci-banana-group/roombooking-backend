@@ -1,12 +1,14 @@
 package edu.mci
 
 import edu.mci.repository.BookingRepositoryImpl
+import edu.mci.repository.EquipmentRepositoryImpl
 import edu.mci.repository.RoomRepositoryImpl
 import edu.mci.repository.UserRepositoryImpl
 import edu.mci.routes.room.bookingRoutes
 import edu.mci.routes.room.buildingRoutes
 import edu.mci.routes.room.roomRoutes
 import edu.mci.service.BookingService
+import edu.mci.service.RoomService
 import io.ktor.serialization.kotlinx.json.*
 import edu.mci.plugins.configureDatabases
 import edu.mci.plugins.seedData
@@ -33,9 +35,11 @@ fun Application.module() {
     val bookingRepository = BookingRepositoryImpl()
     val roomRepository = RoomRepositoryImpl()
     val userRepository = UserRepositoryImpl()
+    val equipmentRepository = EquipmentRepositoryImpl()
     val bookingService = BookingService(bookingRepository, roomRepository, userRepository)
+    val roomService = RoomService(roomRepository, bookingRepository, equipmentRepository)
 
-    configureRouting(bookingService)
+    configureRouting(bookingService, roomService)
 }
 
 private fun Application.configureMonitoring() {
@@ -46,10 +50,10 @@ private fun Application.configureMonitoring() {
 }
 
 
-private fun Application.configureRouting(bookingService: BookingService) {
+private fun Application.configureRouting(bookingService: BookingService, roomService: RoomService) {
     routing {
         swaggerUI(path = "/swagger", swaggerFile = "openapi/open-api.json")
-        roomRoutes()
+        roomRoutes(roomService)
         bookingRoutes(bookingService)
         buildingRoutes()
     }

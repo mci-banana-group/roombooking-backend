@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class EquipmentResponse(
-    val id: Long,
+    val id: Int,
     val name: String,
-    val description: String,
+    val quantity: Int,
 )
