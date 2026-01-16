@@ -1,5 +1,6 @@
-package edu.mci.models
+package edu.mci.model.db
 
+import edu.mci.model.api.response.RoomResponse
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -31,3 +32,15 @@ class Room(id: EntityID<Int>) : IntEntity(id) {
 enum class RoomStatus {
     FREE, RESERVED, OCCUPIED
 }
+
+fun Room.toResponse() = RoomResponse(
+    id = this.id.value,
+    roomNumber = this.roomNumber,
+    name = this.name,
+    description = this.description,
+    status = this.status.name,
+    capacity = this.capacity,
+    equipment = this.equipment.map {
+        it.toResponse()
+    }
+)

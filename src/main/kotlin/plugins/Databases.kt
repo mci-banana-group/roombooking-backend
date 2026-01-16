@@ -1,6 +1,12 @@
 package edu.mci.plugins
 
-import edu.mci.models.*
+import edu.mci.model.db.Bookings
+import edu.mci.model.db.Buildings
+import edu.mci.model.db.Notifications
+import edu.mci.model.db.PresenceConfirmations
+import edu.mci.model.db.RoomEquipmentItems
+import edu.mci.model.db.Rooms
+import edu.mci.model.db.Users
 import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils

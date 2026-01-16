@@ -1,5 +1,6 @@
-package edu.mci.models
+package edu.mci.model.db
 
+import edu.mci.model.api.response.EquipmentResponse
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -22,3 +23,9 @@ class RoomEquipmentItem(id: EntityID<Int>) : IntEntity(id) {
 enum class EquipmentType {
     BEAMER, HDMI_CABLE, WHITEBOARD, DISPLAY
 }
+
+fun RoomEquipmentItem.toResponse() = EquipmentResponse(
+    id = id.value,
+    name = type.name,
+    quantity = quantity,
+)
