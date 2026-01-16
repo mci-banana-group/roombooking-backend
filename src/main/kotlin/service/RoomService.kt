@@ -21,20 +21,18 @@ class RoomService(
         date: LocalDate?,
         requiredEquipment: List<String>,
     ): List<RoomWithBookingsResponse> = transaction {
-        val rooms = roomRepository.findAll(capacity, buildingId)
+        val rooms = roomRepository.findAll(capacity, buildingId, requiredEquipment)
 
-        rooms.filter { room ->
-            requiredEquipment.all { required ->
-                room.equipment.any { it.type.name.equals(required, ignoreCase = true) }
-            }
-        }.map { room ->
-            val bookings = if (date != null) {
-                bookingRepository.findByRoomIdAndDate(room.id.value, date)
-                    .filter { it.status == BookingStatus.RESERVED || it.status == BookingStatus.CHECKED_IN }
-                    .map { it.toResponse() }
-            } else {
-                emptyList()
-            }
+        val bookingsByRoom = if (date != null && rooms.isNotEmpty()) {
+            bookingRepository.findByRoomIdsAndDate(rooms.map { it.id.value }, date)
+                .filter { it.status == BookingStatus.RESERVED || it.status == BookingStatus.CHECKED_IN }
+                .groupBy { it.room.id.value }
+        } else {
+            emptyMap()
+        }
+
+        rooms.map { room ->
+            val bookings = bookingsByRoom[room.id.value]?.map { it.toResponse() } ?: emptyList()
 
             RoomWithBookingsResponse(
                 room = room.toResponse(),

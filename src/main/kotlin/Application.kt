@@ -3,9 +3,9 @@ package edu.mci
 import edu.mci.plugins.configureDatabases
 import edu.mci.plugins.seedData
 import edu.mci.repository.*
-import edu.mci.routes.room.bookingRoutes
-import edu.mci.routes.room.buildingRoutes
-import edu.mci.routes.room.roomRoutes
+import edu.mci.routes.bookingRoutes
+import edu.mci.routes.buildingRoutes
+import edu.mci.routes.roomRoutes
 import edu.mci.service.BookingService
 import edu.mci.service.BuildingService
 import edu.mci.service.RoomService

@@ -1,4 +1,4 @@
-package edu.mci.routes.room
+package edu.mci.routes
 
 import edu.mci.model.api.response.BuildingResponse
 import edu.mci.service.BuildingService
@@ -14,6 +14,6 @@ fun Route.buildingRoutes(buildingService: BuildingService) {
      * @response 200 application/json [BuildingResponse] List of all available buildings
      */
 get("/buildings") {
-        call.respond(message = buildingService.getALlBuildings(), status = HttpStatusCode.OK)
+        call.respond(message = buildingService.getAllBuildings(), status = HttpStatusCode.OK)
     }
 }

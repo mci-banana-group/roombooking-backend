@@ -1,4 +1,4 @@
-package edu.mci.routes.room
+package edu.mci.routes
 
 import edu.mci.model.api.request.CheckInRequest
 import edu.mci.model.api.request.CreateBookingRequest

@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class BuildingService(private val buildingRepository: BuildingRepository) {
 
-    fun getALlBuildings(): List<BuildingResponse> = transaction {
+    fun getAllBuildings(): List<BuildingResponse> = transaction {
         buildingRepository.findAll().map {
             it.toResponse()
         }

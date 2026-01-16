@@ -1,6 +1,5 @@
 package edu.mci.model.db
 
-import edu.mci.model.api.response.EquipmentResponse
 import edu.mci.model.api.response.RoomResponse
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -42,10 +41,6 @@ fun Room.toResponse() = RoomResponse(
     status = this.status.name,
     capacity = this.capacity,
     equipment = this.equipment.map {
-        EquipmentResponse(
-            id = it.id.value,
-            name = it.type.name,
-            quantity = it.quantity,
-        )
+        it.toResponse()
     }
 )

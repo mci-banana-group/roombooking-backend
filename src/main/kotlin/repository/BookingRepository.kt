@@ -1,17 +1,14 @@
 package edu.mci.repository
 
-import edu.mci.model.db.Booking
-import edu.mci.model.db.BookingStatus
-import edu.mci.model.db.Bookings
-import edu.mci.model.db.Room
-import edu.mci.model.db.User
+import edu.mci.model.db.*
 import kotlinx.datetime.*
+import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.and
 
 interface BookingRepository {
     fun findById(id: Int): Booking?
     fun findByUserId(userId: Int): List<Booking>
-    fun findByRoomIdAndDate(roomId: Int, date: LocalDate): List<Booking>
+    fun findByRoomIdsAndDate(roomIds: List<Int>, date: LocalDate): List<Booking>
     fun create(
         user: User,
         room: Room,
@@ -36,15 +33,18 @@ interface BookingRepository {
 class BookingRepositoryImpl : BookingRepository {
     override fun findById(id: Int): Booking? = Booking.findById(id)
 
+    override fun findByUserId(userId: Int): List<Booking> =
+        Booking.find { Bookings.user eq userId }.with(Booking::user).toList()
 
-    override fun findByUserId(userId: Int): List<Booking> = Booking.find { Bookings.user eq userId }.toList()
-
-    override fun findByRoomIdAndDate(roomId: Int, date: LocalDate): List<Booking> {
+    override fun findByRoomIdsAndDate(roomIds: List<Int>, date: LocalDate): List<Booking> {
+        if (roomIds.isEmpty()) {
+            return emptyList()
+        }
         val startOfDay = LocalDateTime(date.year, date.month, date.dayOfMonth, 0, 0)
         val endOfDay = LocalDateTime(date.year, date.month, date.dayOfMonth, 23, 59, 59)
         return Booking.find {
-            (Bookings.room eq roomId) and (Bookings.start greaterEq startOfDay) and (Bookings.start lessEq endOfDay)
-        }.toList()
+            (Bookings.room inList roomIds) and (Bookings.start greaterEq startOfDay) and (Bookings.start lessEq endOfDay)
+        }.with(Booking::user).toList()
     }
 
     override fun create(
