@@ -22,7 +22,8 @@ ktor {
         version = "0.1"
         summary =
             "IMPORTANT: Timestamps start/end are in Strings in ISO-8601: 2026-01-14T12:34:56Z --- !they aren't objects! it's just wrongly parsed by the open api generator"
-        description = "baseUrl: https://roombooking-backend-l7kv.onrender.com"
+        description =
+            "Authentication: All protected endpoints require a JWT Bearer token in the Authorization header. 1. Login at /auth/login. 2. Use token as Bearer in header. Base URL: https://roombooking-backend-l7kv.onrender.com"
         license = "Apache/1.0"
 
         // Location of the generated specification (defaults to openapi/generated.json)
@@ -58,4 +59,6 @@ dependencies {
     implementation(libs.ktor.serialization)
     implementation(libs.ktor.server.swagger)
     implementation(libs.ktor.server.call.logging)
+    implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.auth.jwt)
 }

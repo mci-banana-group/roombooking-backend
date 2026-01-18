@@ -13,14 +13,16 @@ fun Application.seedData() {
         // Users
         val admin = User.new {
             email = "admin@mci.edu"
+            password = "password"
             firstName = "Admin"
             lastName = "User"
             permissionLevel = PermissionLevel.ADMIN
             role = Role.STAFF
         }
-        
+
         val lecturer = User.new {
             email = "lecturer@mci.edu"
+            password = "password"
             firstName = "John"
             lastName = "Doe"
             permissionLevel = PermissionLevel.USER
@@ -63,6 +65,6 @@ fun Application.seedData() {
             this.room = room101
         }
     }
-    
+
     environment.log.info("Database seeded with dummy data.")
 }

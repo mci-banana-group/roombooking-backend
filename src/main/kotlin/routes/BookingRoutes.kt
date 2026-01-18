@@ -11,7 +11,6 @@ import io.ktor.server.routing.*
 
 fun Route.bookingRoutes(bookingService: BookingService) {
     route("/bookings") {
-        val mockUserId = 2 // Using userId 2 (lecturer from seed) as mock authenticated user
 
         /**
          * Get all bookings for the currently authenticated user.
@@ -23,7 +22,7 @@ fun Route.bookingRoutes(bookingService: BookingService) {
          */
         get("/me") {
             runCatching {
-                bookingService.getBookingsForUser(mockUserId)
+                bookingService.getBookingsForUser(call.getUserId())
             }.onSuccess { bookings ->
                 call.respond(bookings)
             }.onFailure { e ->
@@ -44,7 +43,7 @@ fun Route.bookingRoutes(bookingService: BookingService) {
         post {
             runCatching {
                 val request = call.receive<CreateBookingRequest>()
-                bookingService.createBooking(mockUserId, request)
+                bookingService.createBooking(call.getUserId(), request)
             }.onSuccess { booking ->
                 call.respond(HttpStatusCode.Created, booking)
             }.onFailure { e ->
@@ -84,7 +83,7 @@ fun Route.bookingRoutes(bookingService: BookingService) {
 
             runCatching {
                 val request = call.receive<CreateBookingRequest>()
-                bookingService.updateBooking(mockUserId, bookingId, request)
+                bookingService.updateBooking(call.getUserId(), bookingId, request)
             }.onSuccess { updatedBooking ->
                 call.respond(HttpStatusCode.Accepted, updatedBooking)
             }.onFailure { e ->
@@ -126,7 +125,7 @@ fun Route.bookingRoutes(bookingService: BookingService) {
             }
 
             runCatching {
-                bookingService.deleteBooking(mockUserId, bookingId)
+                bookingService.deleteBooking(call.getUserId(), bookingId)
             }.onSuccess {
                 call.respond(HttpStatusCode.NoContent)
             }.onFailure { e ->
@@ -162,7 +161,7 @@ fun Route.bookingRoutes(bookingService: BookingService) {
         post("/checkin") {
             runCatching {
                 val checkInRequest = call.receive<CheckInRequest>()
-                bookingService.checkIn(mockUserId, checkInRequest)
+                bookingService.checkIn(call.getUserId(), checkInRequest)
             }.onSuccess {
                 call.respond(HttpStatusCode.OK)
             }.onFailure { e ->
