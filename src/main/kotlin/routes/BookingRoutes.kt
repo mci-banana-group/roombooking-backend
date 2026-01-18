@@ -53,6 +53,11 @@ fun Route.bookingRoutes(bookingService: BookingService) {
                         status = HttpStatusCode.BadRequest
                     )
 
+                    is IllegalStateException -> call.respondText(
+                        e.message ?: "Conflict",
+                        status = HttpStatusCode.Conflict
+                    )
+
                     else -> call.respondText(
                         e.message ?: "Internal Server Error",
                         status = HttpStatusCode.InternalServerError

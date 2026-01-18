@@ -9,6 +9,10 @@ import edu.mci.routes.authRoutes
 import edu.mci.routes.bookingRoutes
 import edu.mci.routes.buildingRoutes
 import edu.mci.routes.roomRoutes
+import edu.mci.service.BookingScheduler
+import edu.mci.service.BookingService
+import edu.mci.service.BuildingService
+import edu.mci.service.RoomService
 import edu.mci.service.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -54,6 +58,11 @@ fun Application.module() {
     val bookingService = BookingService(bookingRepository, roomRepository, userRepository)
     val roomService = RoomService(roomRepository, bookingRepository, equipmentRepository)
     val buildingService = BuildingService(buildingRepository)
+
+    val bookingScheduler = BookingScheduler(bookingRepository)
+    bookingScheduler.start()
+
+    configureRouting(bookingService, roomService, buildingService)
 
     configureRouting(bookingService, roomService, buildingService, authService)
 }
