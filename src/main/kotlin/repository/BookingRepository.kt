@@ -9,6 +9,7 @@ interface BookingRepository {
     fun findById(id: Int): Booking?
     fun findByUserId(userId: Int): List<Booking>
     fun findByRoomIdsAndDate(roomIds: List<Int>, date: LocalDate): List<Booking>
+    fun findOverlappingBookings(roomId: Int, start: Instant, end: Instant): List<Booking>
     fun create(
         user: User,
         room: Room,
@@ -45,6 +46,18 @@ class BookingRepositoryImpl : BookingRepository {
         return Booking.find {
             (Bookings.room inList roomIds) and (Bookings.start greaterEq startOfDay) and (Bookings.start lessEq endOfDay)
         }.with(Booking::user).toList()
+    }
+
+    override fun findOverlappingBookings(roomId: Int, start: Instant, end: Instant): List<Booking> {
+        val startDateTime = start.toLocalDateTime(TimeZone.UTC)
+        val endDateTime = end.toLocalDateTime(TimeZone.UTC)
+
+        return Booking.find {
+            (Bookings.room eq roomId) and
+                    ((Bookings.status eq BookingStatus.RESERVED) or (Bookings.status eq BookingStatus.CHECKED_IN)) and
+                    (Bookings.start less endDateTime) and
+                    (Bookings.end greater startDateTime)
+        }.toList()
     }
 
     override fun create(

@@ -21,10 +21,23 @@ class BookingService(
     }
 
     fun createBooking(userId: Int, createDto: CreateBookingRequest): BookingResponse = transaction {
+        if (createDto.start >= createDto.end) {
+            throw IllegalArgumentException("Start time must be before end time")
+        }
+
+        if (createDto.start <= kotlinx.datetime.Clock.System.now()) {
+            throw IllegalArgumentException("Booking must be in the future")
+        }
+
         val room = roomRepository.findById(createDto.roomId)
             ?: throw IllegalArgumentException("Room not found")
 
         val user = userRepository.findById(userId) ?: throw IllegalArgumentException("User not found")
+
+        val overlaps = bookingRepository.findOverlappingBookings(createDto.roomId, createDto.start, createDto.end)
+        if (overlaps.isNotEmpty()) {
+            throw IllegalStateException("Slot not available")
+        }
 
         bookingRepository.create(
             user = user,
