@@ -9,6 +9,7 @@ interface BookingRepository {
     fun findById(id: Int): Booking?
     fun findByUserId(userId: Int): List<Booking>
     fun findByRoomIdsAndDate(roomIds: List<Int>, date: LocalDate): List<Booking>
+    fun findExpiredReservations(dateTime: LocalDateTime): List<Booking>
     fun create(
         user: User,
         room: Room,
@@ -45,6 +46,15 @@ class BookingRepositoryImpl : BookingRepository {
         return Booking.find {
             (Bookings.room inList roomIds) and (Bookings.start greaterEq startOfDay) and (Bookings.start lessEq endOfDay)
         }.with(Booking::user).toList()
+    }
+
+    override fun findExpiredReservations(dateTime: LocalDateTime): List<Booking> {
+        return Booking.find {
+            (Bookings.status eq BookingStatus.RESERVED) and (Bookings.start lessEq dateTime)
+        }.filter { booking ->
+            val expirationTime = booking.start.toInstant(TimeZone.UTC).plus(booking.gracePeriodMin, DateTimeUnit.MINUTE)
+            expirationTime < dateTime.toInstant(TimeZone.UTC)
+        }
     }
 
     override fun create(
