@@ -45,7 +45,7 @@ class AuthService(
 
         userRepository.create(
             email = request.email,
-            password = request.password, // cleartext for now
+            password = passwordService.hashPassword(request.password),
             firstName = request.firstName,
             lastName = request.lastName,
             permissionLevel = request.permissionLevel,

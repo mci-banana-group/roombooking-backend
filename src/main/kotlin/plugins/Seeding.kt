@@ -1,19 +1,21 @@
 package edu.mci.plugins
 
 import edu.mci.model.db.*
+import edu.mci.service.BCryptPasswordService
 import io.ktor.server.application.*
 import kotlinx.datetime.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
 fun Application.seedData() {
+    val passwordService = BCryptPasswordService()
     transaction {
         if (User.count() > 0) return@transaction // Already seeded
 
         // Users
         val admin = User.new {
             email = "admin@mci.edu"
-            password = "password"
+            password = passwordService.hashPassword("password")
             firstName = "Admin"
             lastName = "User"
             permissionLevel = PermissionLevel.ADMIN
@@ -22,7 +24,7 @@ fun Application.seedData() {
 
         val lecturer = User.new {
             email = "lecturer@mci.edu"
-            password = "password"
+            password = passwordService.hashPassword("password")
             firstName = "John"
             lastName = "Doe"
             permissionLevel = PermissionLevel.USER

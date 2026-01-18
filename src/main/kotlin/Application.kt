@@ -45,7 +45,7 @@ fun Application.module() {
     val equipmentRepository = EquipmentRepositoryImpl()
     val buildingRepository = BuildingRepositoryImpl()
 
-    val passwordService = CleartextPasswordService()
+    val passwordService = BCryptPasswordService()
     val jwtSecret = environment.config.property("jwt.secret").getString()
     val jwtIssuer = environment.config.property("jwt.issuer").getString()
     val jwtAudience = environment.config.property("jwt.audience").getString()
