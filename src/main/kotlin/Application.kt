@@ -62,8 +62,6 @@ fun Application.module() {
     val bookingScheduler = BookingScheduler(bookingRepository)
     bookingScheduler.start()
 
-    configureRouting(bookingService, roomService, buildingService)
-
     configureRouting(bookingService, roomService, buildingService, authService)
 }
 
@@ -129,5 +127,3 @@ private fun Application.configureAuth(
         }
     }
 }
-
-
