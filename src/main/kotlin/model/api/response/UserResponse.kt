@@ -1,6 +1,6 @@
 package edu.mci.model.api.response
 
-import kotlinx.serialization.*
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserResponse(
@@ -8,6 +8,7 @@ data class UserResponse(
     val lastName: String,
     val email: String,
     val role: MciRole?,
+    val isAdmin: Boolean,
 )
 
 @Serializable

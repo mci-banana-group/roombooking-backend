@@ -1,8 +1,11 @@
 package edu.mci
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import edu.mci.plugins.configureDatabases
 import edu.mci.plugins.seedData
 import edu.mci.repository.*
+import edu.mci.routes.authRoutes
 import edu.mci.routes.bookingRoutes
 import edu.mci.routes.buildingRoutes
 import edu.mci.routes.roomRoutes
@@ -10,12 +13,17 @@ import edu.mci.service.BookingScheduler
 import edu.mci.service.BookingService
 import edu.mci.service.BuildingService
 import edu.mci.service.RoomService
+import edu.mci.service.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.swagger.*
 import io.ktor.server.request.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import org.slf4j.event.Level
@@ -36,14 +44,25 @@ fun Application.module() {
     val userRepository = UserRepositoryImpl()
     val equipmentRepository = EquipmentRepositoryImpl()
     val buildingRepository = BuildingRepositoryImpl()
+
+    val passwordService = BCryptPasswordService()
+    val jwtSecret = environment.config.property("jwt.secret").getString()
+    val jwtIssuer = environment.config.property("jwt.issuer").getString()
+    val jwtAudience = environment.config.property("jwt.audience").getString()
+    val jwtRealm = environment.config.property("jwt.realm").getString()
+
+    val authService = AuthService(userRepository, passwordService, jwtSecret, jwtIssuer, jwtAudience)
+
+    configureAuth(jwtSecret, jwtIssuer, jwtAudience, jwtRealm)
+
     val bookingService = BookingService(bookingRepository, roomRepository, userRepository)
     val roomService = RoomService(roomRepository, bookingRepository, equipmentRepository)
     val buildingService = BuildingService(buildingRepository)
-    
+
     val bookingScheduler = BookingScheduler(bookingRepository)
     bookingScheduler.start()
 
-    configureRouting(bookingService, roomService, buildingService)
+    configureRouting(bookingService, roomService, buildingService, authService)
 }
 
 private fun Application.configureMonitoring() {
@@ -57,13 +76,17 @@ private fun Application.configureMonitoring() {
 private fun Application.configureRouting(
     bookingService: BookingService,
     roomService: RoomService,
-    buildingService: BuildingService
+    buildingService: BuildingService,
+    authService: AuthService
 ) {
     routing {
         swaggerUI(path = "/swagger", swaggerFile = "openapi/open-api.json")
-        roomRoutes(roomService)
-        bookingRoutes(bookingService)
-        buildingRoutes(buildingService)
+        authRoutes(authService)
+        authenticate("auth-jwt") {
+            roomRoutes(roomService)
+            bookingRoutes(bookingService)
+            buildingRoutes(buildingService)
+        }
     }
 }
 
@@ -75,4 +98,32 @@ private fun Application.configureSerialization() {
     }
 }
 
-
+private fun Application.configureAuth(
+    jwtSecret: String,
+    jwtIssuer: String,
+    jwtAudience: String,
+    jwtRealm: String
+) {
+    install(Authentication) {
+        jwt("auth-jwt") {
+            realm = jwtRealm
+            verifier(
+                JWT
+                    .require(Algorithm.HMAC256(jwtSecret))
+                    .withAudience(jwtAudience)
+                    .withIssuer(jwtIssuer)
+                    .build()
+            )
+            validate { credential ->
+                if (credential.payload.getClaim("userId").asInt() != null) {
+                    JWTPrincipal(credential.payload)
+                } else {
+                    null
+                }
+            }
+            challenge { _, _ ->
+                call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
+            }
+        }
+    }
+}
