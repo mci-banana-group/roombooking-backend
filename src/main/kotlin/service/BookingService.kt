@@ -9,6 +9,7 @@ import edu.mci.repository.BookingRepository
 import edu.mci.repository.RoomRepository
 import edu.mci.repository.UserRepository
 import org.jetbrains.exposed.sql.transactions.transaction
+import kotlinx.datetime.Clock.System.now
 
 class BookingService(
     private val bookingRepository: BookingRepository,
@@ -25,7 +26,7 @@ class BookingService(
             throw IllegalArgumentException("Start time must be before end time")
         }
 
-        if (createDto.start <= kotlinx.datetime.Clock.System.now()) {
+        if (createDto.start <= now()) {
             throw IllegalArgumentException("Booking must be in the future")
         }
 

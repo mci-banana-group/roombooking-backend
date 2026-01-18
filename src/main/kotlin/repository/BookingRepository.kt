@@ -4,6 +4,7 @@ import edu.mci.model.db.*
 import kotlinx.datetime.*
 import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.or
 
 interface BookingRepository {
     fun findById(id: Int): Booking?
