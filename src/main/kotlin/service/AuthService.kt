@@ -3,7 +3,9 @@ package edu.mci.service
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import edu.mci.model.api.request.LoginRequest
+import edu.mci.model.api.request.RegistrationRequest
 import edu.mci.model.api.response.LoginResponse
+import edu.mci.model.api.response.UserResponse
 import edu.mci.model.db.toResponse
 import edu.mci.repository.UserRepository
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -34,5 +36,20 @@ class AuthService(
             token = token,
             user = transaction { user.toResponse() }
         )
+    }
+
+    fun register(request: RegistrationRequest): UserResponse? = transaction {
+        if (userRepository.findByEmail(request.email) != null) {
+            return@transaction null
+        }
+
+        userRepository.create(
+            email = request.email,
+            password = request.password, // cleartext for now
+            firstName = request.firstName,
+            lastName = request.lastName,
+            permissionLevel = request.permissionLevel,
+            role = request.role
+        ).toResponse()
     }
 }
