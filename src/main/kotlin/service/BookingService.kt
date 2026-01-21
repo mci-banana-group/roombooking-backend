@@ -70,15 +70,26 @@ class BookingService(
         ).toResponse()
     }
 
-    fun deleteBooking(userId: Int, bookingId: Int) = transaction {
+    fun deleteBooking(bookingId: Int) = transaction {
+        val existingBooking =
+            bookingRepository.findById(bookingId) ?: throw IllegalArgumentException("Booking not found")
+
+        bookingRepository.delete(existingBooking)
+    }
+
+    fun cancelBooking(userId: Int, bookingId: Int) = transaction {
         val existingBooking =
             bookingRepository.findById(bookingId) ?: throw IllegalArgumentException("Booking not found")
 
         if (existingBooking.user.id.value != userId) {
-            throw IllegalAccessException("You are not authorized to delete this booking")
+            throw IllegalAccessException("You are not authorized to cancel this booking")
         }
 
-        bookingRepository.delete(existingBooking)
+        if (existingBooking.status == BookingStatus.CANCELLED) {
+            throw IllegalStateException("Booking is already cancelled")
+        }
+
+        bookingRepository.updateStatus(existingBooking, BookingStatus.CANCELLED)
     }
 
     fun checkIn(userId: Int, checkInRequest: CheckInRequest) = transaction {

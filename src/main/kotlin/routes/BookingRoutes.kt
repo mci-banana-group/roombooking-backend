@@ -111,28 +111,30 @@ fun Route.bookingRoutes(bookingService: BookingService) {
             }
         }
 
+
         /**
-         * Delete a booking.
+         * Cancel a booking. Users can only cancel their own bookings.
          *
          * @tag Bookings
-         * @path bookingId [Int] The ID of the booking to delete
-         * @response 204 Booking deleted successfully
+         * @path bookingId [Int] The ID of the booking to cancel
+         * @response 200 Booking cancelled successfully
          * @response 400 text/plain Invalid booking ID
-         * @response 403 text/plain Unauthorized to delete this booking
+         * @response 403 text/plain Unauthorized to cancel this booking
          * @response 404 text/plain Booking not found
+         * @response 409 text/plain Booking already cancelled
          * @response 500 text/plain Internal server error
          */
-        delete("/{bookingId}") {
+        post("/{bookingId}/cancel") {
             val bookingId = call.parameters["bookingId"]?.toIntOrNull()
             if (bookingId == null) {
                 call.respondText(text = "Invalid Booking ID", status = HttpStatusCode.BadRequest)
-                return@delete
+                return@post
             }
 
             runCatching {
-                bookingService.deleteBooking(call.getUserId(), bookingId)
+                bookingService.cancelBooking(call.getUserId(), bookingId)
             }.onSuccess {
-                call.respond(HttpStatusCode.NoContent)
+                call.respond(HttpStatusCode.OK)
             }.onFailure { e ->
                 when (e) {
                     is IllegalArgumentException -> call.respondText(
@@ -143,6 +145,11 @@ fun Route.bookingRoutes(bookingService: BookingService) {
                     is IllegalAccessException -> call.respondText(
                         e.message ?: "Forbidden",
                         status = HttpStatusCode.Forbidden
+                    )
+
+                    is IllegalStateException -> call.respondText(
+                        e.message ?: "Conflict",
+                        status = HttpStatusCode.Conflict
                     )
 
                     else -> call.respondText(

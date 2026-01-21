@@ -90,7 +90,7 @@ private fun Application.configureRouting(
             roomRoutes(roomService)
             bookingRoutes(bookingService)
             buildingRoutes(buildingService)
-            adminRoutes(adminService)
+            adminRoutes(adminService, bookingService)
         }
     }
 }

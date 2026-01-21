@@ -2,12 +2,13 @@ package edu.mci.routes
 
 import edu.mci.model.api.response.AdminDashboardResponse
 import edu.mci.service.AdminService
+import edu.mci.service.BookingService
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.LocalDateTime
 
-fun Route.adminRoutes(adminService: AdminService) {
+fun Route.adminRoutes(adminService: AdminService, bookingService: BookingService) {
     route("/admin") {
         /**
          * Get dashboard statistics for admins.
@@ -54,6 +55,48 @@ fun Route.adminRoutes(adminService: AdminService) {
 
             val stats = adminService.getDashboardStats(start, end, finalLimit)
             call.respond(stats)
+        }
+
+        /**
+         * Delete a booking. Only accessible by admins.
+         *
+         * @tag Admin
+         * @path bookingId [Int] The ID of the booking to delete
+         * @response 204 Booking deleted successfully
+         * @response 400 text/plain Invalid booking ID
+         * @response 403 text/plain Only admins can delete bookings
+         * @response 404 text/plain Booking not found
+         * @response 500 text/plain Internal server error
+         */
+        delete("/bookings/{bookingId}") {
+            if (!call.isAdmin()) {
+                call.respondText(text = "Only admins can delete bookings", status = HttpStatusCode.Forbidden)
+                return@delete
+            }
+
+            val bookingId = call.parameters["bookingId"]?.toIntOrNull()
+            if (bookingId == null) {
+                call.respondText(text = "Invalid Booking ID", status = HttpStatusCode.BadRequest)
+                return@delete
+            }
+
+            runCatching {
+                bookingService.deleteBooking(bookingId)
+            }.onSuccess {
+                call.respond(HttpStatusCode.NoContent)
+            }.onFailure { e ->
+                when (e) {
+                    is IllegalArgumentException -> call.respondText(
+                        e.message ?: "Not Found",
+                        status = HttpStatusCode.NotFound
+                    )
+
+                    else -> call.respondText(
+                        e.message ?: "Internal Server Error",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
+            }
         }
     }
 }
