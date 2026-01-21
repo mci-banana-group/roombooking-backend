@@ -43,6 +43,7 @@ fun Application.seedData() {
             name = "Seminar Room A"
             description = "A small seminar room"
             status = RoomStatus.FREE
+            confirmationCode = "CONF123"
             capacity = 20
             building = mainBuilding
         }

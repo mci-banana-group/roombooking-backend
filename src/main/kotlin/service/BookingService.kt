@@ -90,7 +90,8 @@ class BookingService(
             throw IllegalAccessException("You are not authorized to check in for this booking")
         }
 
-        if (existingBooking.confirmationCode != checkInRequest.code) {
+        // Either booking confirmation code (dynamic) or room confirmation code (static fallback) must match
+        if (existingBooking.confirmationCode != checkInRequest.code && existingBooking.room.confirmationCode != checkInRequest.code) {
             throw IllegalArgumentException("Confirmation Code Not Matching")
         }
 
