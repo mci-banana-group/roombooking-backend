@@ -55,9 +55,9 @@ fun Application.seedData() {
 
         // Bookings
         Booking.new {
-            val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
             start = now
-            end = Clock.System.now().plus(2, DateTimeUnit.HOUR).toLocalDateTime(TimeZone.currentSystemDefault())
+            end = Clock.System.now().plus(2, DateTimeUnit.HOUR).toLocalDateTime(TimeZone.UTC)
             createdAt = now
             gracePeriodMin = 15
             status = BookingStatus.RESERVED
