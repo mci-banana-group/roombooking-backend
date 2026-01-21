@@ -6,8 +6,8 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 import org.slf4j.LoggerFactory
 
 class MqttService(
-    private val brokerUrl: String = "tcp://localhost:1883",
-    private val clientId: String = "RoomBookingBackend"
+    private val brokerUrl: String,
+    private val clientId: String
 ) {
     private val logger = LoggerFactory.getLogger(MqttService::class.java)
     private var client: MqttClient? = null

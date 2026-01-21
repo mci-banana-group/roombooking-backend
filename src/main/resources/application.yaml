@@ -11,3 +11,7 @@ jwt:
     issuer: "http://0.0.0.0:8080"
     audience: "http://0.0.0.0:8080"
     realm: "Access to room booking"
+
+mqtt:
+    brokerUrl: ${MQTT_BROKER_URL:tcp://localhost:1883}
+    clientId: ${MQTT_CLIENT_ID:RoomBookingBackend}
