@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import edu.mci.plugins.configureDatabases
 import edu.mci.plugins.seedData
 import edu.mci.repository.*
+import edu.mci.routes.adminRoutes
 import edu.mci.routes.authRoutes
 import edu.mci.routes.bookingRoutes
 import edu.mci.routes.buildingRoutes
@@ -44,6 +45,7 @@ fun Application.module() {
     val userRepository = UserRepositoryImpl()
     val equipmentRepository = EquipmentRepositoryImpl()
     val buildingRepository = BuildingRepositoryImpl()
+    val searchedItemRepository = SearchedItemRepositoryImpl()
 
     val passwordService = BCryptPasswordService()
     val jwtSecret = environment.config.property("jwt.secret").getString()
@@ -56,13 +58,14 @@ fun Application.module() {
     configureAuth(jwtSecret, jwtIssuer, jwtAudience, jwtRealm)
 
     val bookingService = BookingService(bookingRepository, roomRepository, userRepository)
-    val roomService = RoomService(roomRepository, bookingRepository, equipmentRepository)
+    val roomService = RoomService(roomRepository, bookingRepository, equipmentRepository, searchedItemRepository)
     val buildingService = BuildingService(buildingRepository)
+    val adminService = AdminService(bookingRepository, searchedItemRepository)
 
     val bookingScheduler = BookingScheduler(bookingRepository)
     bookingScheduler.start()
 
-    configureRouting(bookingService, roomService, buildingService, authService)
+    configureRouting(bookingService, roomService, buildingService, authService, adminService)
 }
 
 private fun Application.configureMonitoring() {
@@ -77,7 +80,8 @@ private fun Application.configureRouting(
     bookingService: BookingService,
     roomService: RoomService,
     buildingService: BuildingService,
-    authService: AuthService
+    authService: AuthService,
+    adminService: AdminService
 ) {
     routing {
         swaggerUI(path = "/swagger", swaggerFile = "openapi/open-api.json")
@@ -86,6 +90,7 @@ private fun Application.configureRouting(
             roomRoutes(roomService)
             bookingRoutes(bookingService)
             buildingRoutes(buildingService)
+            adminRoutes(adminService)
         }
     }
 }

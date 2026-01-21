@@ -31,6 +31,7 @@ interface BookingRepository {
 
     fun updateStatus(booking: Booking, status: BookingStatus): Booking
     fun delete(booking: Booking)
+    fun countByStatusAndDateRange(status: BookingStatus, start: LocalDateTime, end: LocalDateTime): Int
 }
 
 class BookingRepositoryImpl : BookingRepository {
@@ -110,5 +111,15 @@ class BookingRepositoryImpl : BookingRepository {
 
     override fun delete(booking: Booking) {
         booking.delete()
+    }
+
+    override fun countByStatusAndDateRange(
+        status: BookingStatus,
+        start: LocalDateTime,
+        end: LocalDateTime
+    ): Int {
+        return Booking.find {
+            (Bookings.status eq status) and (Bookings.start greaterEq start) and (Bookings.start lessEq end)
+        }.count().toInt()
     }
 }

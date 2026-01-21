@@ -3,6 +3,7 @@ package edu.mci.plugins
 import edu.mci.model.db.Bookings
 import edu.mci.model.db.Buildings
 import edu.mci.model.db.Notifications
+import edu.mci.model.db.SearchedItems
 import edu.mci.model.db.PresenceConfirmations
 import edu.mci.model.db.RoomEquipmentItems
 import edu.mci.model.db.Rooms
@@ -23,7 +24,7 @@ fun Application.configureDatabases() {
     // Start H2 Web Console
     org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start()
 
-    
+
     transaction(database) {
         SchemaUtils.create(
             Users,
@@ -32,7 +33,8 @@ fun Application.configureDatabases() {
             RoomEquipmentItems,
             Bookings,
             PresenceConfirmations,
-            Notifications
+            Notifications,
+            SearchedItems
         )
     }
 }

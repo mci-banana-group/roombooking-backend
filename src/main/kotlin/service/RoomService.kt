@@ -7,13 +7,18 @@ import edu.mci.model.db.toResponse
 import edu.mci.repository.BookingRepository
 import edu.mci.repository.EquipmentRepository
 import edu.mci.repository.RoomRepository
+import edu.mci.repository.SearchedItemRepository
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class RoomService(
     private val roomRepository: RoomRepository,
     private val bookingRepository: BookingRepository,
     private val equipmentRepository: EquipmentRepository,
+    private val searchedItemRepository: SearchedItemRepository,
 ) {
     fun getAllRooms(
         capacity: Int?,
@@ -21,6 +26,12 @@ class RoomService(
         date: LocalDate?,
         requiredEquipment: List<String>,
     ): List<RoomWithBookingsResponse> = transaction {
+        if (requiredEquipment.isNotEmpty()) {
+            val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+            requiredEquipment.forEach {
+                searchedItemRepository.recordSearch(it, now)
+            }
+        }
         val rooms = roomRepository.findAll(capacity, buildingId, requiredEquipment)
 
         val bookingsByRoom = if (date != null && rooms.isNotEmpty()) {
