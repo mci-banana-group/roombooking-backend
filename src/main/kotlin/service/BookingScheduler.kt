@@ -21,13 +21,13 @@ class BookingScheduler(
         logger.info("Starting Booking Scheduler")
         scope.launch {
             while (isActive) {
-                delay(5.minutes)
                 try {
                     checkExpiredBookings()
                     verifyCheckInWindow()
                 } catch (e: Exception) {
                     logger.error("Error checking expired bookings", e)
                 }
+                delay(5.minutes)
             }
         }
     }
