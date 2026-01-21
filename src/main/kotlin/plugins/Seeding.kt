@@ -43,7 +43,6 @@ fun Application.seedData() {
             name = "Seminar Room A"
             description = "A small seminar room"
             status = RoomStatus.FREE
-            confirmationCode = "CONF123"
             capacity = 20
             building = mainBuilding
         }
@@ -65,6 +64,7 @@ fun Application.seedData() {
             description = "Lecturer Meeting"
             user = lecturer
             this.room = room101
+            this.confirmationCode = "1234"
         }
     }
 

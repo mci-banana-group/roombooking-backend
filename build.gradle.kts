@@ -62,4 +62,5 @@ dependencies {
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.bcrypt)
+    implementation(libs.paho.mqttv3)
 }

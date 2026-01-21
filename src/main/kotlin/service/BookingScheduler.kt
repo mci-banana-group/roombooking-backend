@@ -11,7 +11,8 @@ import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.minutes
 
 class BookingScheduler(
-    private val bookingRepository: BookingRepository
+    private val bookingRepository: BookingRepository,
+    private val mqttService: MqttService
 ) {
     private val logger = LoggerFactory.getLogger(BookingScheduler::class.java)
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -23,6 +24,7 @@ class BookingScheduler(
                 delay(5.minutes)
                 try {
                     checkExpiredBookings()
+                    verifyCheckInWindow()
                 } catch (e: Exception) {
                     logger.error("Error checking expired bookings", e)
                 }
@@ -39,6 +41,20 @@ class BookingScheduler(
                 expiredBookings.forEach { booking ->
                     logger.info("Marking booking ${booking.id} as NO_SHOW")
                     bookingRepository.updateStatus(booking, BookingStatus.NO_SHOW)
+                }
+            }
+        }
+    }
+
+    private fun verifyCheckInWindow() {
+        transaction {
+            val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+            val bookings = bookingRepository.findBookingsCheckInWindow(now)
+            if (bookings.isNotEmpty()) {
+                logger.info("Found ${bookings.size} bookings in check-in window")
+                bookings.forEach { booking ->
+                    logger.info("Publishing code for booking ${booking.id} in room ${booking.room.roomNumber}")
+                    mqttService.publishRoomCode(booking.room.id.value, booking.confirmationCode)
                 }
             }
         }
