@@ -58,8 +58,11 @@ fun Application.module() {
     val bookingService = BookingService(bookingRepository, roomRepository, userRepository)
     val roomService = RoomService(roomRepository, bookingRepository, equipmentRepository)
     val buildingService = BuildingService(buildingRepository)
+    val mqttBrokerUrl = environment.config.property("mqtt.brokerUrl").getString()
+    val mqttClientId = environment.config.property("mqtt.clientId").getString()
+    val mqttService = MqttService(mqttBrokerUrl, mqttClientId)
 
-    val bookingScheduler = BookingScheduler(bookingRepository)
+    val bookingScheduler = BookingScheduler(bookingRepository, mqttService)
     bookingScheduler.start()
 
     configureRouting(bookingService, roomService, buildingService, authService)
