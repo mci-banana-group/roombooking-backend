@@ -11,7 +11,7 @@ object Notifications : IntIdTable() {
     val message = varchar("message", 255)
     val channel = enumerationByName("channel", 20, NotificationChannel::class)
     
-    val user = reference("user_id", Users)
+    val user = reference("user_id", Users).nullable()
     val booking = reference("booking_id", Bookings)
 }
 
@@ -22,7 +22,7 @@ class Notification(id: EntityID<Int>) : IntEntity(id) {
     var message by Notifications.message
     var channel by Notifications.channel
     
-    var user by User referencedOn Notifications.user
+    var user by User optionalReferencedOn Notifications.user
     var booking by Booking referencedOn Notifications.booking
 }
 
