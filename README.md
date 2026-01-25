@@ -96,3 +96,45 @@ If the server starts successfully, you'll see the following output:
 2024-12-04 14:32:45.682 [main] INFO  Application - Responding at http://0.0.0.0:8080
 ```
 
+
+## MQTT Integration & Room Displays
+
+This service integrates with an MQTT broker to publish dynamic check-in codes for room displays.
+
+### Prerequisites
+
+An MQTT broker (e.g., Eclipse Mosquitto) must be running. By default, the application connects to:
+- **URL**: `tcp://localhost:1883`
+- **Client ID**: `RoomBookingBackend`
+
+### Topic Structure
+
+The backend publishes the current valid confirmation code to the following topic:
+
+`room/{roomId}/code`
+
+- **Payload**: The 4-digit confirmation code (string).
+- **QoS**: 1
+- **Retained**: true (New subscribers/screens get the latest code immediately).
+
+### Workflow
+
+1.  **Booking Creation**: When a booking is created, a unique 4-digit confirmation code is generated.
+2.  **Check-in Window**: A background scheduler runs periodically to check for bookings starting within the grace period (15 minutes).
+3.  **Publishing**: If a booking is entering the check-in window, the code is published to the specific room's topic.
+4.  **Display**: IoT screens subscribing to `room/{roomId}/code` will receive and display this code.
+5.  **Check-in**: Users enter this code in the app to verify their presence.
+
+### Running Locally with Mosquitto
+
+1.  **Imstall & Start Mosquitto**:
+    - Windows: `mosquitto -v`
+    - Linux/Mac: `brew install mosquitto && mosquitto`
+2.  **Subscribe to debug**:
+    ```bash
+    mosquitto_sub -t "room/+/code" -v
+    ```
+3.  **Run the Backend**:
+    ```bash
+    ./gradlew run
+    ```

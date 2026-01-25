@@ -15,6 +15,7 @@ object Bookings : IntIdTable() {
     val createdAt = datetime("created_at")
     val gracePeriodMin = integer("grace_period_min")
     val status = enumerationByName("status", 20, BookingStatus::class)
+    val confirmationCode = varchar("confirmation_code", 50).default("0000")
     val description = varchar("description", 255)
 
     val user = reference("user_id", Users)
@@ -29,6 +30,7 @@ class Booking(id: EntityID<Int>) : IntEntity(id) {
     var createdAt by Bookings.createdAt
     var gracePeriodMin by Bookings.gracePeriodMin
     var status by Bookings.status
+    var confirmationCode by Bookings.confirmationCode
     var description by Bookings.description
 
     var user by User referencedOn Bookings.user
