@@ -6,9 +6,11 @@ import org.jetbrains.exposed.sql.selectAll
 
 interface BuildingRepository {
     fun findAll(): List<Building>
+    fun findById(id: Int): Building?
 }
 
 class BuildingRepositoryImpl : BuildingRepository {
     override fun findAll(): List<Building> = Building.wrapRows(Buildings.selectAll()).toList()
 
+    override fun findById(id: Int): Building? = Building.findById(id)
 }

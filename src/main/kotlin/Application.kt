@@ -60,7 +60,13 @@ fun Application.module() {
     configureAuth(jwtSecret, jwtIssuer, jwtAudience, jwtRealm)
 
     val bookingService = BookingService(bookingRepository, roomRepository, userRepository)
-    val roomService = RoomService(roomRepository, bookingRepository, equipmentRepository, searchedItemRepository)
+    val roomService = RoomService(
+        roomRepository,
+        bookingRepository,
+        equipmentRepository,
+        searchedItemRepository,
+        buildingRepository
+    )
     val buildingService = BuildingService(buildingRepository)
     val adminService = AdminService(bookingRepository, searchedItemRepository)
     val mqttBrokerUrl = environment.config.property("mqtt.brokerUrl").getString()
@@ -95,7 +101,7 @@ private fun Application.configureRouting(
             roomRoutes(roomService)
             bookingRoutes(bookingService)
             buildingRoutes(buildingService)
-            adminRoutes(adminService, bookingService)
+            adminRoutes(adminService, bookingService, roomService)
         }
     }
 }

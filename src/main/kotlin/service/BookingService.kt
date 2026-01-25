@@ -111,8 +111,11 @@ class BookingService(
             throw IllegalAccessException("You are not authorized to check in for this booking")
         }
 
+        val roomConfirmationCode = existingBooking.room?.confirmationCode
+            ?: throw IllegalArgumentException("Room not found")
+
         // Either booking confirmation code (dynamic) or room confirmation code (static fallback) must match
-        if (existingBooking.confirmationCode != checkInRequest.code && existingBooking.room.confirmationCode != checkInRequest.code) {
+        if (existingBooking.confirmationCode != checkInRequest.code && roomConfirmationCode != checkInRequest.code) {
             throw IllegalArgumentException("Confirmation Code Not Matching")
         }
 

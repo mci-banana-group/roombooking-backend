@@ -5,6 +5,7 @@ import kotlinx.datetime.*
 import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.or
+import org.jetbrains.exposed.sql.update
 
 interface BookingRepository {
     fun findById(id: Int): Booking?
@@ -33,6 +34,8 @@ interface BookingRepository {
 
     fun updateStatus(booking: Booking, status: BookingStatus): Booking
     fun delete(booking: Booking)
+    fun countActiveByRoomId(roomId: Int, endAfter: LocalDateTime): Int
+    fun clearRoomReferences(roomId: Int)
     fun countByStatusAndDateRange(status: BookingStatus, start: LocalDateTime, end: LocalDateTime): Int
 }
 
@@ -124,6 +127,20 @@ class BookingRepositoryImpl : BookingRepository {
 
     override fun delete(booking: Booking) {
         booking.delete()
+    }
+
+    override fun countActiveByRoomId(roomId: Int, endAfter: LocalDateTime): Int {
+        return Booking.find {
+            (Bookings.room eq roomId) and
+                (Bookings.status inList listOf(BookingStatus.RESERVED, BookingStatus.CHECKED_IN)) and
+                (Bookings.end greater endAfter)
+        }.count().toInt()
+    }
+
+    override fun clearRoomReferences(roomId: Int) {
+        Bookings.update({ Bookings.room eq roomId }) {
+            it[room] = null
+        }
     }
 
     override fun countByStatusAndDateRange(

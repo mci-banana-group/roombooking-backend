@@ -1,14 +1,24 @@
 package edu.mci.routes
 
+import edu.mci.model.api.request.CreateRoomRequest
+import edu.mci.model.api.request.UpdateRoomRequest
 import edu.mci.model.api.response.AdminDashboardResponse
+import edu.mci.model.api.response.AdminRoomResponse
+import edu.mci.model.api.response.RoomDeletionConflictResponse
 import edu.mci.service.AdminService
 import edu.mci.service.BookingService
+import edu.mci.service.BuildingNotFoundException
+import edu.mci.service.RoomDeletionBlockedException
+import edu.mci.service.RoomNotFoundException
+import edu.mci.service.RoomService
+import edu.mci.service.RoomValidationException
 import io.ktor.http.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.LocalDateTime
 
-fun Route.adminRoutes(adminService: AdminService, bookingService: BookingService) {
+fun Route.adminRoutes(adminService: AdminService, bookingService: BookingService, roomService: RoomService) {
     route("/admin") {
         /**
          * Get dashboard statistics for admins.
@@ -94,6 +104,148 @@ fun Route.adminRoutes(adminService: AdminService, bookingService: BookingService
                     is IllegalStateException -> call.respondText(
                         e.message ?: "Conflict",
                         status = HttpStatusCode.Conflict
+                    )
+
+                    else -> call.respondText(
+                        e.message ?: "Internal Server Error",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
+            }
+        }
+
+        /**
+         * Create a room. Only accessible by admins.
+         *
+         * @tag Admin
+         * @body application/json [CreateRoomRequest] Room details.
+         * @response 201 application/json [AdminRoomResponse] Room created successfully.
+         * @response 400 text/plain Invalid request data
+         * @response 401 text/plain Unauthorized
+         * @response 403 text/plain Forbidden (not an admin)
+         * @response 404 text/plain Building not found
+         * @response 500 text/plain Internal server error
+         */
+        post("/rooms") {
+            if (!call.isAdmin()) {
+                call.respondText(text = "Only admins can create rooms", status = HttpStatusCode.Forbidden)
+                return@post
+            }
+
+            runCatching {
+                val request = call.receive<CreateRoomRequest>()
+                roomService.createRoom(request)
+            }.onSuccess { room ->
+                call.respond(HttpStatusCode.Created, room)
+            }.onFailure { e ->
+                when (e) {
+                    is RoomValidationException -> call.respondText(
+                        e.message ?: "Bad Request",
+                        status = HttpStatusCode.BadRequest
+                    )
+
+                    is BuildingNotFoundException -> call.respondText(
+                        e.message ?: "Not Found",
+                        status = HttpStatusCode.NotFound
+                    )
+
+                    else -> call.respondText(
+                        e.message ?: "Internal Server Error",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
+            }
+        }
+
+        /**
+         * Update a room. Only accessible by admins.
+         *
+         * @tag Admin
+         * @path roomId [Int] The ID of the room to update.
+         * @body application/json [UpdateRoomRequest] Updated room details.
+         * @response 202 application/json [AdminRoomResponse] Room updated successfully.
+         * @response 400 text/plain Invalid request data
+         * @response 401 text/plain Unauthorized
+         * @response 403 text/plain Forbidden (not an admin)
+         * @response 404 text/plain Room or building not found
+         * @response 500 text/plain Internal server error
+         */
+        put("/rooms/{roomId}") {
+            if (!call.isAdmin()) {
+                call.respondText(text = "Only admins can update rooms", status = HttpStatusCode.Forbidden)
+                return@put
+            }
+
+            val roomId = call.parameters["roomId"]?.toIntOrNull()
+            if (roomId == null) {
+                call.respondText(text = "Invalid Room ID", status = HttpStatusCode.BadRequest)
+                return@put
+            }
+
+            runCatching {
+                val request = call.receive<UpdateRoomRequest>()
+                roomService.updateRoom(roomId, request)
+            }.onSuccess { room ->
+                call.respond(HttpStatusCode.Accepted, room)
+            }.onFailure { e ->
+                when (e) {
+                    is RoomValidationException -> call.respondText(
+                        e.message ?: "Bad Request",
+                        status = HttpStatusCode.BadRequest
+                    )
+
+                    is RoomNotFoundException, is BuildingNotFoundException -> call.respondText(
+                        e.message ?: "Not Found",
+                        status = HttpStatusCode.NotFound
+                    )
+
+                    else -> call.respondText(
+                        e.message ?: "Internal Server Error",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
+            }
+        }
+
+        /**
+         * Delete a room. Only accessible by admins.
+         *
+         * @tag Admin
+         * @path roomId [Int] The ID of the room to delete.
+         * @response 204 Room deleted successfully
+         * @response 400 text/plain Invalid room ID
+         * @response 401 text/plain Unauthorized
+         * @response 403 text/plain Forbidden (not an admin)
+         * @response 404 text/plain Room not found
+         * @response 409 application/json [RoomDeletionConflictResponse] Room deletion blocked by dependencies
+         * @response 500 text/plain Internal server error
+         */
+        delete("/rooms/{roomId}") {
+            if (!call.isAdmin()) {
+                call.respondText(text = "Only admins can delete rooms", status = HttpStatusCode.Forbidden)
+                return@delete
+            }
+
+            val roomId = call.parameters["roomId"]?.toIntOrNull()
+            if (roomId == null) {
+                call.respondText(text = "Invalid Room ID", status = HttpStatusCode.BadRequest)
+                return@delete
+            }
+
+            runCatching {
+                roomService.deleteRoom(roomId)
+            }.onSuccess {
+                call.respond(HttpStatusCode.NoContent)
+            }.onFailure { e ->
+                when (e) {
+                    is RoomNotFoundException -> call.respondText(
+                        e.message ?: "Not Found",
+                        status = HttpStatusCode.NotFound
+                    )
+
+                    is RoomDeletionBlockedException -> call.respond(
+                        HttpStatusCode.Conflict,
+                        e.conflict
                     )
 
                     else -> call.respondText(

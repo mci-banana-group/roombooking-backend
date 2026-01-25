@@ -53,8 +53,13 @@ class BookingScheduler(
             if (bookings.isNotEmpty()) {
                 logger.info("Found ${bookings.size} bookings in check-in window")
                 bookings.forEach { booking ->
-                    logger.info("Publishing code for booking ${booking.id} in room ${booking.room.roomNumber}")
-                    mqttService.publishRoomCode(booking.room.id.value, booking.confirmationCode)
+                    val room = booking.room
+                    if (room == null) {
+                        logger.warn("Skipping booking ${booking.id}: room no longer exists")
+                        return@forEach
+                    }
+                    logger.info("Publishing code for booking ${booking.id} in room ${room.roomNumber}")
+                    mqttService.publishRoomCode(room.id.value, booking.confirmationCode)
                 }
             }
         }

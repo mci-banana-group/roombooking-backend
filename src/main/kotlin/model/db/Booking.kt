@@ -19,7 +19,7 @@ object Bookings : IntIdTable() {
     val description = varchar("description", 255)
 
     val user = reference("user_id", Users)
-    val room = reference("room_id", Rooms)
+    val room = reference("room_id", Rooms).nullable()
 }
 
 class Booking(id: EntityID<Int>) : IntEntity(id) {
@@ -34,7 +34,7 @@ class Booking(id: EntityID<Int>) : IntEntity(id) {
     var description by Bookings.description
 
     var user by User referencedOn Bookings.user
-    var room by Room referencedOn Bookings.room
+    var room by Room optionalReferencedOn Bookings.room
     val confirmations by PresenceConfirmation referrersOn PresenceConfirmations.booking
     val notifications by Notification referrersOn Notifications.booking
 }
