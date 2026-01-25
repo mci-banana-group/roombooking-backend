@@ -167,7 +167,7 @@ fun Application.seedData() {
             name = "Seminar Room A",
             description = "A small seminar room",
             status = RoomStatus.FREE,
-            code = "MB-101",
+            code = "1234",
             capacity = 20,
             building = mainBuilding
         )
@@ -177,7 +177,7 @@ fun Application.seedData() {
             name = "Seminar Room B",
             description = "Seminar room with flexible seating",
             status = RoomStatus.RESERVED,
-            code = "MB-102",
+            code = "1234",
             capacity = 24,
             building = mainBuilding
         )
@@ -187,7 +187,7 @@ fun Application.seedData() {
             name = "Lecture Hall 1",
             description = "Tiered seating with media control desk",
             status = RoomStatus.FREE,
-            code = "MB-103",
+            code = "1234",
             capacity = 80,
             building = mainBuilding
         )
@@ -197,7 +197,7 @@ fun Application.seedData() {
             name = "Project Studio",
             description = "Open room for group work",
             status = RoomStatus.OCCUPIED,
-            code = "MB-201",
+            code = "1234",
             capacity = 30,
             building = mainBuilding
         )
@@ -207,7 +207,7 @@ fun Application.seedData() {
             name = "Conference Room",
             description = "Large conference room with video wall",
             status = RoomStatus.FREE,
-            code = "MB-202",
+            code = "1234",
             capacity = 18,
             building = mainBuilding
         )
@@ -217,7 +217,7 @@ fun Application.seedData() {
             name = "Thesis Room",
             description = "Quiet room for thesis defenses",
             status = RoomStatus.RESERVED,
-            code = "MB-203",
+            code = "1234",
             capacity = 12,
             building = mainBuilding
         )
@@ -227,7 +227,7 @@ fun Application.seedData() {
             name = "Workshop Studio",
             description = "Hands-on studio with movable tables",
             status = RoomStatus.FREE,
-            code = "MB-204",
+            code = "1234",
             capacity = 26,
             building = mainBuilding
         )
@@ -237,7 +237,7 @@ fun Application.seedData() {
             name = "Computer Lab 1",
             description = "PC lab with dual displays",
             status = RoomStatus.FREE,
-            code = "TC-110",
+            code = "1234",
             capacity = 28,
             building = techCenter
         )
@@ -247,7 +247,7 @@ fun Application.seedData() {
             name = "Robotics Lab",
             description = "Lab with workbenches and sensors",
             status = RoomStatus.OCCUPIED,
-            code = "TC-120",
+            code = "1234",
             capacity = 16,
             building = techCenter
         )
@@ -257,7 +257,7 @@ fun Application.seedData() {
             name = "Innovation Classroom",
             description = "Modular furniture and wall whiteboards",
             status = RoomStatus.FREE,
-            code = "TC-210",
+            code = "1234",
             capacity = 32,
             building = techCenter
         )
@@ -267,7 +267,7 @@ fun Application.seedData() {
             name = "Makerspace",
             description = "3D printers and prototyping tools",
             status = RoomStatus.RESERVED,
-            code = "TC-220",
+            code = "1234",
             capacity = 14,
             building = techCenter
         )
@@ -277,7 +277,7 @@ fun Application.seedData() {
             name = "Network Lab",
             description = "Lab with switches and routers",
             status = RoomStatus.FREE,
-            code = "TC-230",
+            code = "1234",
             capacity = 18,
             building = techCenter
         )
@@ -287,7 +287,7 @@ fun Application.seedData() {
             name = "AR/VR Studio",
             description = "Immersive lab with VR headsets",
             status = RoomStatus.RESERVED,
-            code = "TC-240",
+            code = "1234",
             capacity = 12,
             building = techCenter
         )
@@ -297,7 +297,7 @@ fun Application.seedData() {
             name = "Quiet Study 1",
             description = "Silent study room",
             status = RoomStatus.FREE,
-            code = "LA-010",
+            code = "1234",
             capacity = 12,
             building = libraryAnnex
         )
@@ -307,7 +307,7 @@ fun Application.seedData() {
             name = "Quiet Study 2",
             description = "Silent study room with window wall",
             status = RoomStatus.FREE,
-            code = "LA-011",
+            code = "1234",
             capacity = 10,
             building = libraryAnnex
         )
@@ -317,7 +317,7 @@ fun Application.seedData() {
             name = "Group Study 1",
             description = "Group study with whiteboards",
             status = RoomStatus.RESERVED,
-            code = "LA-020",
+            code = "1234",
             capacity = 8,
             building = libraryAnnex
         )
@@ -327,7 +327,7 @@ fun Application.seedData() {
             name = "Group Study 2",
             description = "Small group room with display",
             status = RoomStatus.FREE,
-            code = "LA-021",
+            code = "1234",
             capacity = 8,
             building = libraryAnnex
         )
@@ -337,7 +337,7 @@ fun Application.seedData() {
             name = "Media Study",
             description = "Room with media editing setup",
             status = RoomStatus.RESERVED,
-            code = "LA-030",
+            code = "1234",
             capacity = 6,
             building = libraryAnnex
         )
@@ -347,7 +347,7 @@ fun Application.seedData() {
             name = "Startup Garage",
             description = "Pitch room with movable panels",
             status = RoomStatus.FREE,
-            code = "IH-301",
+            code = "1234",
             capacity = 26,
             building = innovationHub
         )
@@ -357,7 +357,7 @@ fun Application.seedData() {
             name = "Design Lab",
             description = "Creative lab with sketch walls",
             status = RoomStatus.FREE,
-            code = "IH-302",
+            code = "1234",
             capacity = 20,
             building = innovationHub
         )
@@ -367,7 +367,7 @@ fun Application.seedData() {
             name = "Board Room",
             description = "Executive board room",
             status = RoomStatus.RESERVED,
-            code = "IH-401",
+            code = "1234",
             capacity = 14,
             building = innovationHub
         )
@@ -377,7 +377,7 @@ fun Application.seedData() {
             name = "Strategy Room",
             description = "Planning room with wall displays",
             status = RoomStatus.FREE,
-            code = "IH-402",
+            code = "1234",
             capacity = 16,
             building = innovationHub
         )
@@ -387,7 +387,7 @@ fun Application.seedData() {
             name = "Investor Lounge",
             description = "Private meeting room for investors",
             status = RoomStatus.RESERVED,
-            code = "IH-501",
+            code = "1234",
             capacity = 10,
             building = innovationHub
         )
@@ -397,7 +397,7 @@ fun Application.seedData() {
             name = "Gym Hall",
             description = "Multi-purpose sports hall",
             status = RoomStatus.OCCUPIED,
-            code = "SH-001",
+            code = "1234",
             capacity = 60,
             building = sportsHall
         )
@@ -407,7 +407,7 @@ fun Application.seedData() {
             name = "Dance Studio",
             description = "Studio with mirrors and wooden floor",
             status = RoomStatus.FREE,
-            code = "SH-002",
+            code = "1234",
             capacity = 25,
             building = sportsHall
         )
@@ -417,7 +417,7 @@ fun Application.seedData() {
             name = "Yoga Room",
             description = "Quiet space for yoga and stretching",
             status = RoomStatus.FREE,
-            code = "SH-003",
+            code = "1234",
             capacity = 18,
             building = sportsHall
         )
