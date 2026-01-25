@@ -4,13 +4,14 @@ ktor:
             - edu.mci.ApplicationKt.module
     deployment:
         host: 0.0.0.0
-        port: ${PORT:8080}
+        port: ${?PORT}
 
 jwt:
-    secret: "super-secret-key"
-    issuer: "http://0.0.0.0:8080"
-    audience: "http://0.0.0.0:8080"
+    secret: ${JWT_SECRET:verysecret}
+    issuer: ${JWT_ISSUER:https://roombooking-backend-l7kv.onrender.com}
+    audience: ${JWT_AUDIENCE:roombooking-clients}
     realm: "Access to room booking"
+
 
 mqtt:
     brokerUrl: ${MQTT_BROKER_URL:tcp://localhost:1883}
