@@ -58,19 +58,20 @@ fun Route.adminRoutes(adminService: AdminService, bookingService: BookingService
         }
 
         /**
-         * Delete a booking. Only accessible by admins.
+         * Cancel a booking. Only accessible by admins.
          *
          * @tag Admin
-         * @path bookingId [Int] The ID of the booking to delete
-         * @response 204 Booking deleted successfully
+         * @path bookingId [Int] The ID of the booking to cancel
+         * @response 204 Booking cancelled successfully
          * @response 400 text/plain Invalid booking ID
-         * @response 403 text/plain Only admins can delete bookings
+         * @response 403 text/plain Only admins can cancel bookings
          * @response 404 text/plain Booking not found
+         * @response 409 text/plain Booking cannot be cancelled
          * @response 500 text/plain Internal server error
          */
         delete("/bookings/{bookingId}") {
             if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can delete bookings", status = HttpStatusCode.Forbidden)
+                call.respondText(text = "Only admins can cancel bookings", status = HttpStatusCode.Forbidden)
                 return@delete
             }
 
@@ -81,7 +82,7 @@ fun Route.adminRoutes(adminService: AdminService, bookingService: BookingService
             }
 
             runCatching {
-                bookingService.deleteBooking(bookingId)
+                bookingService.adminCancelBooking(bookingId)
             }.onSuccess {
                 call.respond(HttpStatusCode.NoContent)
             }.onFailure { e ->
@@ -89,6 +90,10 @@ fun Route.adminRoutes(adminService: AdminService, bookingService: BookingService
                     is IllegalArgumentException -> call.respondText(
                         e.message ?: "Not Found",
                         status = HttpStatusCode.NotFound
+                    )
+                    is IllegalStateException -> call.respondText(
+                        e.message ?: "Conflict",
+                        status = HttpStatusCode.Conflict
                     )
 
                     else -> call.respondText(

@@ -16,7 +16,7 @@ fun Route.bookingRoutes(bookingService: BookingService) {
          * Get all bookings for the currently authenticated user.
          *
          * @tag Bookings
-         * @description Timestamps in ISO-8601 UTC Strings: 2026-01-14T12:34:56Z. - Status values: RESERVED, CANCELLED, CHECKED_IN, NO_SHOW. - User roles: STUDENT, STAFF, LECTURER.
+         * @description Timestamps in ISO-8601 UTC Strings: 2026-01-14T12:34:56Z. - Status values: RESERVED, CANCELLED, ADMIN_CANCELLED, CHECKED_IN, NO_SHOW. - User roles: STUDENT, STAFF, LECTURER.
          * @response 200 application/json [BookingResponse] List of bookings for the user.
          * @response 500 text/plain Internal server error
          */
@@ -34,7 +34,7 @@ fun Route.bookingRoutes(bookingService: BookingService) {
          * Create a new booking.
          *
          * @tag Bookings
-         * @description Timestamps in ISO-8601 UTC Strings: 2026-01-14T12:34:56Z. - Status values: RESERVED, CANCELLED, CHECKED_IN, NO_SHOW. - User roles: STUDENT, STAFF, LECTURER.
+         * @description Timestamps in ISO-8601 UTC Strings: 2026-01-14T12:34:56Z. - Status values: RESERVED, CANCELLED, ADMIN_CANCELLED, CHECKED_IN, NO_SHOW. - User roles: STUDENT, STAFF, LECTURER.
          * @body application/json [CreateBookingRequest] Details of the booking to create.
          * @response 201 application/json [BookingResponse] Booking created successfully.
          * @response 400 text/plain Invalid request data or room/user not found
@@ -70,7 +70,7 @@ fun Route.bookingRoutes(bookingService: BookingService) {
          * Update an existing booking.
          *
          * @tag Bookings
-         * @description Timestamps in ISO-8601 UTC Strings: 2026-01-14T12:34:56Z. - Status values: RESERVED, CANCELLED, CHECKED_IN, NO_SHOW. - User roles: STUDENT, STAFF, LECTURER.
+         * @description Timestamps in ISO-8601 UTC Strings: 2026-01-14T12:34:56Z. - Status values: RESERVED, CANCELLED, ADMIN_CANCELLED, CHECKED_IN, NO_SHOW. - User roles: STUDENT, STAFF, LECTURER.
          * @path bookingId [Int] The ID of the booking to update
          * @body application/json [CreateBookingRequest] Updated booking details.
          * @response 202 application/json [BookingResponse] Booking updated successfully.

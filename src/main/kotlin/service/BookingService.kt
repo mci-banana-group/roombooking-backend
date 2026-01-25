@@ -10,6 +10,8 @@ import edu.mci.repository.RoomRepository
 import edu.mci.repository.UserRepository
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlinx.datetime.Clock.System.now
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 
 class BookingService(
     private val bookingRepository: BookingRepository,
@@ -71,11 +73,19 @@ class BookingService(
         ).toResponse()
     }
 
-    fun deleteBooking(bookingId: Int) = transaction {
+    fun adminCancelBooking(bookingId: Int) = transaction {
         val existingBooking =
             bookingRepository.findById(bookingId) ?: throw IllegalArgumentException("Booking not found")
 
-        bookingRepository.delete(existingBooking)
+        if (existingBooking.end.toInstant(TimeZone.UTC) <= now()) {
+            throw IllegalStateException("Booking is in the past and cannot be cancelled")
+        }
+
+        if (existingBooking.status == BookingStatus.CANCELLED || existingBooking.status == BookingStatus.ADMIN_CANCELLED) {
+            throw IllegalStateException("Booking is already cancelled")
+        }
+
+        bookingRepository.updateStatus(existingBooking, BookingStatus.ADMIN_CANCELLED)
     }
 
     fun cancelBooking(userId: Int, bookingId: Int) = transaction {

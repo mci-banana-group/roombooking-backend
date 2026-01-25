@@ -40,7 +40,7 @@ class Booking(id: EntityID<Int>) : IntEntity(id) {
 }
 
 enum class BookingStatus {
-    RESERVED, CANCELLED, CHECKED_IN, NO_SHOW
+    RESERVED, CANCELLED, ADMIN_CANCELLED, CHECKED_IN, NO_SHOW
 }
 
 fun Booking.toResponse() = BookingResponse(
