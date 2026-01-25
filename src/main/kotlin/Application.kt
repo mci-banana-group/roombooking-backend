@@ -67,7 +67,7 @@ fun Application.module() {
         searchedItemRepository,
         buildingRepository
     )
-    val buildingService = BuildingService(buildingRepository)
+    val buildingService = BuildingService(buildingRepository, roomRepository)
     val adminService = AdminService(bookingRepository, searchedItemRepository)
     val mqttBrokerUrl = environment.config.property("mqtt.brokerUrl").getString()
     val mqttClientId = environment.config.property("mqtt.clientId").getString()
@@ -101,7 +101,7 @@ private fun Application.configureRouting(
             roomRoutes(roomService)
             bookingRoutes(bookingService)
             buildingRoutes(buildingService)
-            adminRoutes(adminService, bookingService, roomService)
+            adminRoutes(adminService, bookingService, roomService, buildingService)
         }
     }
 }

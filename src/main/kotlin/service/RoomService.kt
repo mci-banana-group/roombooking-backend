@@ -3,18 +3,17 @@ package edu.mci.service
 import edu.mci.model.api.request.CreateRoomRequest
 import edu.mci.model.api.request.UpdateRoomRequest
 import edu.mci.model.api.request.RoomEquipmentRequest
-import edu.mci.model.api.response.AdminRoomResponse
 import edu.mci.model.api.response.EquipmentResponse
 import edu.mci.model.api.response.RoomDeletionBlocker
 import edu.mci.model.api.response.RoomDeletionConflictResponse
 import edu.mci.model.api.response.RoomWithBookingsResponse
+import edu.mci.model.api.response.RoomResponse
 import edu.mci.model.db.BookingStatus
 import edu.mci.model.db.EquipmentType
 import edu.mci.model.db.Room
 import edu.mci.model.db.RoomEquipmentItem
 import edu.mci.model.db.RoomEquipmentItems
 import edu.mci.model.db.RoomStatus
-import edu.mci.model.db.toAdminResponse
 import edu.mci.model.db.toResponse
 import edu.mci.repository.BookingRepository
 import edu.mci.repository.BuildingRepository
@@ -73,7 +72,7 @@ class RoomService(
         }
     }
 
-    fun createRoom(request: CreateRoomRequest): AdminRoomResponse = transaction {
+    fun createRoom(request: CreateRoomRequest): RoomResponse = transaction {
         validateRoomRequest(request.roomNumber, request.name, request.description, request.confirmationCode, request.capacity)
         val equipment = parseEquipmentRequests(request.equipment)
         val status = parseStatus(request.status)
@@ -92,10 +91,10 @@ class RoomService(
         if (equipment.isNotEmpty()) {
             upsertRoomEquipment(room, equipment)
         }
-        room.toAdminResponse()
+        room.toResponse()
     }
 
-    fun updateRoom(roomId: Int, request: UpdateRoomRequest): AdminRoomResponse = transaction {
+    fun updateRoom(roomId: Int, request: UpdateRoomRequest): RoomResponse = transaction {
         validateRoomRequest(request.roomNumber, request.name, request.description, request.confirmationCode, request.capacity)
         val equipment = parseEquipmentRequests(request.equipment)
         val status = parseStatus(request.status)
@@ -116,7 +115,7 @@ class RoomService(
         if (equipment.isNotEmpty()) {
             upsertRoomEquipment(room, equipment)
         }
-        room.toAdminResponse()
+        room.toResponse()
     }
 
     fun deleteRoom(roomId: Int) = transaction {

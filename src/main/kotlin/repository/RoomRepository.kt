@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.selectAll
 interface RoomRepository {
     fun findById(id: Int): Room?
     fun findAll(capacity: Int?, buildingId: Int?, requiredEquipment: List<String>): List<Room>
+    fun countByBuildingId(buildingId: Int): Long
     fun create(
         roomNumber: Int,
         name: String,
@@ -64,6 +65,11 @@ class RoomRepositoryImpl : RoomRepository {
         return Room.wrapRows(query).with(Room::equipment).toList()
     }
 
+    override fun countByBuildingId(buildingId: Int): Long =
+        Rooms.selectAll()
+            .where { Rooms.building eq buildingId }
+            .count()
+
     override fun create(
         roomNumber: Int,
         name: String,
@@ -105,4 +111,5 @@ class RoomRepositoryImpl : RoomRepository {
     override fun delete(room: Room) {
         room.delete()
     }
+
 }

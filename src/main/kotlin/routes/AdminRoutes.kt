@@ -1,13 +1,18 @@
 package edu.mci.routes
 
+import edu.mci.model.api.request.CreateBuildingRequest
 import edu.mci.model.api.request.CreateRoomRequest
+import edu.mci.model.api.request.UpdateBuildingRequest
 import edu.mci.model.api.request.UpdateRoomRequest
 import edu.mci.model.api.response.AdminDashboardResponse
-import edu.mci.model.api.response.AdminRoomResponse
 import edu.mci.model.api.response.RoomDeletionConflictResponse
 import edu.mci.service.AdminService
 import edu.mci.service.BookingService
+import edu.mci.service.BuildingConflictException
+import edu.mci.service.BuildingDeletionBlockedException
 import edu.mci.service.BuildingNotFoundException
+import edu.mci.service.BuildingService
+import edu.mci.service.BuildingValidationException
 import edu.mci.service.RoomDeletionBlockedException
 import edu.mci.service.RoomNotFoundException
 import edu.mci.service.RoomService
@@ -18,7 +23,12 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.LocalDateTime
 
-fun Route.adminRoutes(adminService: AdminService, bookingService: BookingService, roomService: RoomService) {
+fun Route.adminRoutes(
+    adminService: AdminService,
+    bookingService: BookingService,
+    roomService: RoomService,
+    buildingService: BuildingService
+) {
     route("/admin") {
         /**
          * Get dashboard statistics for admins.
@@ -65,6 +75,154 @@ fun Route.adminRoutes(adminService: AdminService, bookingService: BookingService
 
             val stats = adminService.getDashboardStats(start, end, finalLimit)
             call.respond(stats)
+        }
+
+        /**
+         * Create a building. Only accessible by admins.
+         *
+         * @tag Admin
+         * @body application/json [CreateBuildingRequest] Building details.
+         * @response 201 application/json [BuildingResponse] Building created successfully.
+         * @response 400 text/plain Invalid request data
+         * @response 401 text/plain Unauthorized
+         * @response 403 text/plain Forbidden (not an admin)
+         * @response 409 text/plain Building already exists
+         * @response 500 text/plain Internal server error
+         */
+        post("/buildings") {
+            if (!call.isAdmin()) {
+                call.respondText(text = "Only admins can create buildings", status = HttpStatusCode.Forbidden)
+                return@post
+            }
+
+            runCatching {
+                val request = call.receive<CreateBuildingRequest>()
+                buildingService.createBuilding(request.name, request.address)
+            }.onSuccess { building ->
+                call.respond(HttpStatusCode.Created, building)
+            }.onFailure { e ->
+                when (e) {
+                    is BuildingValidationException -> call.respondText(
+                        e.message ?: "Bad Request",
+                        status = HttpStatusCode.BadRequest
+                    )
+
+                    is BuildingConflictException -> call.respondText(
+                        e.message ?: "Conflict",
+                        status = HttpStatusCode.Conflict
+                    )
+
+                    else -> call.respondText(
+                        e.message ?: "Internal Server Error",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
+            }
+        }
+
+        /**
+         * Update a building. Only accessible by admins.
+         *
+         * @tag Admin
+         * @path buildingId [Int] The ID of the building to update.
+         * @body application/json [UpdateBuildingRequest] Updated building details.
+         * @response 202 application/json [BuildingResponse] Building updated successfully.
+         * @response 400 text/plain Invalid request data
+         * @response 401 text/plain Unauthorized
+         * @response 403 text/plain Forbidden (not an admin)
+         * @response 404 text/plain Building not found
+         * @response 409 text/plain Building already exists
+         * @response 500 text/plain Internal server error
+         */
+        put("/buildings/{buildingId}") {
+            if (!call.isAdmin()) {
+                call.respondText(text = "Only admins can update buildings", status = HttpStatusCode.Forbidden)
+                return@put
+            }
+
+            val buildingId = call.parameters["buildingId"]?.toIntOrNull()
+            if (buildingId == null) {
+                call.respondText(text = "Invalid Building ID", status = HttpStatusCode.BadRequest)
+                return@put
+            }
+
+            runCatching {
+                val request = call.receive<UpdateBuildingRequest>()
+                buildingService.updateBuilding(buildingId, request.name, request.address)
+            }.onSuccess { building ->
+                call.respond(HttpStatusCode.Accepted, building)
+            }.onFailure { e ->
+                when (e) {
+                    is BuildingValidationException -> call.respondText(
+                        e.message ?: "Bad Request",
+                        status = HttpStatusCode.BadRequest
+                    )
+
+                    is BuildingNotFoundException -> call.respondText(
+                        e.message ?: "Not Found",
+                        status = HttpStatusCode.NotFound
+                    )
+
+                    is BuildingConflictException -> call.respondText(
+                        e.message ?: "Conflict",
+                        status = HttpStatusCode.Conflict
+                    )
+
+                    else -> call.respondText(
+                        e.message ?: "Internal Server Error",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
+            }
+        }
+
+        /**
+         * Delete a building. Only accessible by admins.
+         *
+         * @tag Admin
+         * @path buildingId [Int] The ID of the building to delete.
+         * @response 204 Building deleted successfully
+         * @response 400 text/plain Invalid building ID
+         * @response 401 text/plain Unauthorized
+         * @response 403 text/plain Forbidden (not an admin)
+         * @response 404 text/plain Building not found
+         * @response 409 application/json [BuildingDeletionConflictResponse] Building deletion blocked by rooms
+         * @response 500 text/plain Internal server error
+         */
+        delete("/buildings/{buildingId}") {
+            if (!call.isAdmin()) {
+                call.respondText(text = "Only admins can delete buildings", status = HttpStatusCode.Forbidden)
+                return@delete
+            }
+
+            val buildingId = call.parameters["buildingId"]?.toIntOrNull()
+            if (buildingId == null) {
+                call.respondText(text = "Invalid Building ID", status = HttpStatusCode.BadRequest)
+                return@delete
+            }
+
+            runCatching {
+                buildingService.deleteBuilding(buildingId)
+            }.onSuccess {
+                call.respond(HttpStatusCode.NoContent)
+            }.onFailure { e ->
+                when (e) {
+                    is BuildingNotFoundException -> call.respondText(
+                        e.message ?: "Not Found",
+                        status = HttpStatusCode.NotFound
+                    )
+
+                    is BuildingDeletionBlockedException -> call.respond(
+                        HttpStatusCode.Conflict,
+                        e.conflict
+                    )
+
+                    else -> call.respondText(
+                        e.message ?: "Internal Server Error",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
+            }
         }
 
         /**
@@ -119,7 +277,7 @@ fun Route.adminRoutes(adminService: AdminService, bookingService: BookingService
          *
          * @tag Admin
          * @body application/json [CreateRoomRequest] Room details.
-         * @response 201 application/json [AdminRoomResponse] Room created successfully.
+         * @response 201 application/json [RoomResponse] Room created successfully.
          * @response 400 text/plain Invalid request data
          * @response 401 text/plain Unauthorized
          * @response 403 text/plain Forbidden (not an admin)
@@ -163,7 +321,7 @@ fun Route.adminRoutes(adminService: AdminService, bookingService: BookingService
          * @tag Admin
          * @path roomId [Int] The ID of the room to update.
          * @body application/json [UpdateRoomRequest] Updated room details.
-         * @response 202 application/json [AdminRoomResponse] Room updated successfully.
+         * @response 202 application/json [RoomResponse] Room updated successfully.
          * @response 400 text/plain Invalid request data
          * @response 401 text/plain Unauthorized
          * @response 403 text/plain Forbidden (not an admin)
