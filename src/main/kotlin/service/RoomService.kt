@@ -173,11 +173,16 @@ class RoomService(
         RoomStatus.entries.firstOrNull { it.name == status }
             ?: throw RoomValidationException("Invalid room status: $status")
 
-    private fun parseEquipmentRequests(requests: List<RoomEquipmentRequest>): Map<EquipmentType, Int> {
+    private data class EquipmentSpec(
+        val quantity: Int,
+        val description: String?
+    )
+
+    private fun parseEquipmentRequests(requests: List<RoomEquipmentRequest>): Map<EquipmentType, EquipmentSpec> {
         if (requests.isEmpty()) {
             return emptyMap()
         }
-        val equipment = mutableMapOf<EquipmentType, Int>()
+        val equipment = mutableMapOf<EquipmentType, EquipmentSpec>()
         requests.forEach { request ->
             val type = EquipmentType.entries.firstOrNull { it.name == request.type }
                 ?: throw RoomValidationException("Invalid equipment type: ${request.type}")
@@ -187,25 +192,34 @@ class RoomService(
             if (equipment.containsKey(type)) {
                 throw RoomValidationException("Duplicate equipment type: ${request.type}")
             }
-            equipment[type] = request.quantity
+            val trimmedDescription = request.description?.trim()
+            if (type == EquipmentType.OTHER && trimmedDescription.isNullOrEmpty()) {
+                throw RoomValidationException("Description is required for equipment type OTHER")
+            }
+            equipment[type] = EquipmentSpec(
+                quantity = request.quantity,
+                description = trimmedDescription?.ifEmpty { null }
+            )
         }
         return equipment
     }
 
-    private fun upsertRoomEquipment(room: Room, equipment: Map<EquipmentType, Int>) {
-        equipment.forEach { (type, quantity) ->
+    private fun upsertRoomEquipment(room: Room, equipment: Map<EquipmentType, EquipmentSpec>) {
+        equipment.forEach { (type, spec) ->
             val existing = RoomEquipmentItem.find {
                 (RoomEquipmentItems.room eq room.id) and (RoomEquipmentItems.type eq type)
             }.firstOrNull()
-            if (quantity == 0) {
+            if (spec.quantity == 0) {
                 existing?.delete()
             } else if (existing != null) {
-                existing.quantity = quantity
+                existing.quantity = spec.quantity
+                existing.description = spec.description
             } else {
                 RoomEquipmentItem.new {
                     this.room = room
                     this.type = type
-                    this.quantity = quantity
+                    this.quantity = spec.quantity
+                    this.description = spec.description
                 }
             }
         }
