@@ -3,6 +3,7 @@ package edu.mci
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import edu.mci.plugins.configureDatabases
+import edu.mci.plugins.configureHTTP
 import edu.mci.plugins.seedData
 import edu.mci.repository.*
 import edu.mci.routes.authRoutes
@@ -34,6 +35,7 @@ fun main(args: Array<String>) {
 
 fun Application.module() {
     configureMonitoring()
+    configureHTTP()
     configureDatabases()
     seedData()
     configureSerialization()
