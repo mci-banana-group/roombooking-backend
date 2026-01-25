@@ -3,6 +3,7 @@ package edu.mci
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import edu.mci.plugins.configureDatabases
+import edu.mci.plugins.configureHTTP
 import edu.mci.plugins.seedData
 import edu.mci.repository.*
 import edu.mci.routes.adminRoutes
@@ -35,6 +36,7 @@ fun main(args: Array<String>) {
 
 fun Application.module() {
     configureMonitoring()
+    configureHTTP()
     configureDatabases()
     seedData()
     configureSerialization()
@@ -61,8 +63,11 @@ fun Application.module() {
     val roomService = RoomService(roomRepository, bookingRepository, equipmentRepository, searchedItemRepository)
     val buildingService = BuildingService(buildingRepository)
     val adminService = AdminService(bookingRepository, searchedItemRepository)
+    val mqttBrokerUrl = environment.config.property("mqtt.brokerUrl").getString()
+    val mqttClientId = environment.config.property("mqtt.clientId").getString()
+    val mqttService = MqttService(mqttBrokerUrl, mqttClientId)
 
-    val bookingScheduler = BookingScheduler(bookingRepository)
+    val bookingScheduler = BookingScheduler(bookingRepository, mqttService)
     bookingScheduler.start()
 
     configureRouting(bookingService, roomService, buildingService, authService, adminService)

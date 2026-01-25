@@ -12,6 +12,7 @@ interface BookingRepository {
     fun findByRoomIdsAndDate(roomIds: List<Int>, date: LocalDate): List<Booking>
     fun findOverlappingBookings(roomId: Int, start: Instant, end: Instant): List<Booking>
     fun findExpiredReservations(dateTime: LocalDateTime): List<Booking>
+    fun findBookingsCheckInWindow(dateTime: LocalDateTime): List<Booking>
     fun create(
         user: User,
         room: Room,
@@ -19,6 +20,7 @@ interface BookingRepository {
         end: Instant,
         description: String,
         gracePeriodMin: Int,
+        confirmationCode: String,
     ): Booking
 
     fun update(
@@ -72,6 +74,15 @@ class BookingRepositoryImpl : BookingRepository {
         }
     }
 
+    override fun findBookingsCheckInWindow(dateTime: LocalDateTime): List<Booking> {
+        return Booking.find {
+            (Bookings.status eq BookingStatus.RESERVED) and (Bookings.end greater dateTime)
+        }.filter { booking ->
+            val checkInOpenTime = booking.start.toInstant(TimeZone.UTC).minus(booking.gracePeriodMin, DateTimeUnit.MINUTE)
+            checkInOpenTime <= dateTime.toInstant(TimeZone.UTC)
+        }
+    }
+
     override fun create(
         user: User,
         room: Room,
@@ -79,6 +90,7 @@ class BookingRepositoryImpl : BookingRepository {
         end: Instant,
         description: String,
         gracePeriodMin: Int,
+        confirmationCode: String,
     ): Booking = Booking.new {
         this.start = start.toLocalDateTime(TimeZone.UTC)
         this.end = end.toLocalDateTime(TimeZone.UTC)
@@ -88,6 +100,7 @@ class BookingRepositoryImpl : BookingRepository {
         this.description = description
         this.user = user
         this.room = room
+        this.confirmationCode = confirmationCode
     }
 
     override fun update(
