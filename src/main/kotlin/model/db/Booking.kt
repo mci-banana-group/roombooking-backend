@@ -18,7 +18,7 @@ object Bookings : IntIdTable() {
     val confirmationCode = varchar("confirmation_code", 50).default("0000")
     val description = varchar("description", 255)
 
-    val user = reference("user_id", Users)
+    val user = reference("user_id", Users).nullable()
     val room = reference("room_id", Rooms).nullable()
 }
 
@@ -33,7 +33,7 @@ class Booking(id: EntityID<Int>) : IntEntity(id) {
     var confirmationCode by Bookings.confirmationCode
     var description by Bookings.description
 
-    var user by User referencedOn Bookings.user
+    var user by User optionalReferencedOn Bookings.user
     var room by Room optionalReferencedOn Bookings.room
     val confirmations by PresenceConfirmation referrersOn PresenceConfirmations.booking
     val notifications by Notification referrersOn Notifications.booking
@@ -45,7 +45,7 @@ enum class BookingStatus {
 
 fun Booking.toResponse() = BookingResponse(
     id = this.id.value,
-    user = this.user.toResponse(),
+    user = this.user?.toResponse(),
     start = this.start.toInstant(TimeZone.UTC),
     end = this.end.toInstant(TimeZone.UTC),
     gracePeriodMin = this.gracePeriodMin,

@@ -14,7 +14,7 @@ object Rooms : IntIdTable() {
     val status = enumerationByName("status", 20, RoomStatus::class)
     val confirmationCode = varchar("confirmation_code", 50)
     val capacity = integer("capacity")
-    val building = reference("building_id", Buildings)
+    val building = reference("building_id", Buildings).nullable()
 }
 
 class Room(id: EntityID<Int>) : IntEntity(id) {
@@ -26,7 +26,7 @@ class Room(id: EntityID<Int>) : IntEntity(id) {
     var status by Rooms.status
     var confirmationCode by Rooms.confirmationCode
     var capacity by Rooms.capacity
-    var building by Building referencedOn Rooms.building
+    var building by Building optionalReferencedOn Rooms.building
     val equipment by RoomEquipmentItem referrersOn RoomEquipmentItems.room
 }
 
@@ -43,7 +43,8 @@ fun Room.toResponse() = RoomResponse(
     capacity = this.capacity,
     equipment = this.equipment.map {
         it.toResponse()
-    }
+    },
+    building = this.building?.toResponse()
 )
 
 fun Room.toAdminResponse() = AdminRoomResponse(
@@ -52,7 +53,10 @@ fun Room.toAdminResponse() = AdminRoomResponse(
     name = this.name,
     description = this.description,
     status = this.status.name,
-    confirmationCode = this.confirmationCode,
     capacity = this.capacity,
-    buildingId = this.building.id.value
+    confirmationCode = this.confirmationCode,
+    equipment = this.equipment.map {
+        it.toResponse()
+    },
+    building = this.building?.toResponse()
 )

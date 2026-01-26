@@ -9,7 +9,8 @@ data class AdminRoomResponse(
     val name: String,
     val description: String,
     val status: String,
-    val confirmationCode: String,
     val capacity: Int,
-    val buildingId: Int
+    val confirmationCode: String,
+    val equipment: List<EquipmentResponse>,
+    val building: BuildingResponse?
 )

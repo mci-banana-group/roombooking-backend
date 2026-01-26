@@ -59,6 +59,10 @@ Both endpoints accept the existing room fields plus an optional `equipment` arra
 }
 ```
 
+## Response Notes
+- Responses use the standard `RoomResponse`.
+- The returned `RoomResponse` includes `building` (nullable). After building deletion, rooms will return `building: null`.
+
 ## Backend Behavior (What Happens)
 1) **Room fields validated**: room number > 0, non-blank name/description/confirmation code, capacity >= 0.  
 2) **Status validated**: must match one of `FREE`, `RESERVED`, `OCCUPIED`.  

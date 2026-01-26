@@ -16,10 +16,11 @@ class Building(id: EntityID<Int>) : IntEntity(id) {
 
     var name by Buildings.name
     var address by Buildings.address
-    val rooms by Room referrersOn Rooms.building
+    val rooms by Room optionalReferrersOn Rooms.building
 }
 
 fun Building.toResponse() = BuildingResponse(
     id = id.value,
     name = this.name,
+    address = this.address
 )

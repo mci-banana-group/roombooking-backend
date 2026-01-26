@@ -48,6 +48,7 @@ fun Application.module() {
     val equipmentRepository = EquipmentRepositoryImpl()
     val buildingRepository = BuildingRepositoryImpl()
     val searchedItemRepository = SearchedItemRepositoryImpl()
+    val notificationRepository = NotificationRepositoryImpl()
 
     val passwordService = BCryptPasswordService()
     val jwtSecret = environment.config.property("jwt.secret").getString()
@@ -67,8 +68,14 @@ fun Application.module() {
         searchedItemRepository,
         buildingRepository
     )
-    val buildingService = BuildingService(buildingRepository)
+    val buildingService = BuildingService(buildingRepository, roomRepository)
     val adminService = AdminService(bookingRepository, searchedItemRepository)
+    val adminUserService = AdminUserService(
+        userRepository,
+        bookingRepository,
+        notificationRepository,
+        passwordService
+    )
     val mqttBrokerUrl = environment.config.property("mqtt.brokerUrl").getString()
     val mqttClientId = environment.config.property("mqtt.clientId").getString()
     val mqttService = MqttService(mqttBrokerUrl, mqttClientId)
@@ -76,7 +83,7 @@ fun Application.module() {
     val bookingScheduler = BookingScheduler(bookingRepository, mqttService)
     bookingScheduler.start()
 
-    configureRouting(bookingService, roomService, buildingService, authService, adminService)
+    configureRouting(bookingService, roomService, buildingService, authService, adminService, adminUserService)
 }
 
 private fun Application.configureMonitoring() {
@@ -92,7 +99,8 @@ private fun Application.configureRouting(
     roomService: RoomService,
     buildingService: BuildingService,
     authService: AuthService,
-    adminService: AdminService
+    adminService: AdminService,
+    adminUserService: AdminUserService
 ) {
     routing {
         swaggerUI(path = "/swagger", swaggerFile = "openapi/open-api.json")
@@ -101,7 +109,7 @@ private fun Application.configureRouting(
             roomRoutes(roomService)
             bookingRoutes(bookingService)
             buildingRoutes(buildingService)
-            adminRoutes(adminService, bookingService, roomService)
+            adminRoutes(adminService, adminUserService, bookingService, roomService, buildingService)
         }
     }
 }

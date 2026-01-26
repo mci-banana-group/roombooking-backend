@@ -1,10 +1,9 @@
-package edu.mci.model.api.response
+package edu.mci.model.api.request
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class BuildingResponse(
-    val id: Int,
+data class UpdateBuildingRequest(
     val name: String,
     val address: String
 )

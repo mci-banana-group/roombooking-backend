@@ -11,4 +11,5 @@ data class RoomResponse(
     val status: String,
     val capacity: Int,
     val equipment: List<EquipmentResponse>,
+    val building: BuildingResponse?
 )
