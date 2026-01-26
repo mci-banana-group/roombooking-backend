@@ -22,8 +22,7 @@ fun Application.configureDatabases() {
     )
 
     // Start H2 Web Console
- //   org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start()
-
+//    org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start()
 
     transaction(database) {
         SchemaUtils.create(
