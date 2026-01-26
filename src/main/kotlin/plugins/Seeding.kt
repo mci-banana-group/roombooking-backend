@@ -149,7 +149,7 @@ fun Application.seedData() {
             this.name = name
             this.description = description
             this.status = status
-            confirmationCode = code
+            confirmationCode = "1234"
             this.capacity = capacity
             this.building = building
         }

@@ -421,16 +421,16 @@ fun Route.adminRoutes(
          * @response 409 text/plain Booking cannot be cancelled
          * @response 500 text/plain Internal server error
          */
-        delete("/bookings/{bookingId}") {
+        patch("/bookings/{bookingId}/cancel") {
             if (!call.isAdmin()) {
                 call.respondText(text = "Only admins can cancel bookings", status = HttpStatusCode.Forbidden)
-                return@delete
+                return@patch
             }
 
             val bookingId = call.parameters["bookingId"]?.toIntOrNull()
             if (bookingId == null) {
                 call.respondText(text = "Invalid Booking ID", status = HttpStatusCode.BadRequest)
-                return@delete
+                return@patch
             }
 
             runCatching {
