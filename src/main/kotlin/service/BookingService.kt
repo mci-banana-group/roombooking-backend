@@ -17,6 +17,7 @@ class BookingService(
     private val bookingRepository: BookingRepository,
     private val roomRepository: RoomRepository,
     private val userRepository: UserRepository,
+    private val mqttService: MqttService,
 ) {
     fun getBookingsForUser(userId: Int): List<BookingResponse> = transaction {
         bookingRepository.findByUserId(userId).map { it.toResponse() }
@@ -119,5 +120,12 @@ class BookingService(
         }
 
         bookingRepository.updateStatus(existingBooking, BookingStatus.CHECKED_IN)
+
+        val roomId = existingBooking.room?.id?.value
+        if (roomId != null) {
+            mqttService.publishUnlockDoor(roomId)
+            mqttService.publishTurnOnLight(roomId)
+            mqttService.publishTurnOnHVAC(roomId)
+        }
     }
 }
