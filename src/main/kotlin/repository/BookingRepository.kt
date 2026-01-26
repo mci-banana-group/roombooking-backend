@@ -3,6 +3,8 @@ package edu.mci.repository
 import edu.mci.model.db.*
 import kotlinx.datetime.*
 import org.jetbrains.exposed.dao.with
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.update
@@ -34,8 +36,10 @@ interface BookingRepository {
 
     fun updateStatus(booking: Booking, status: BookingStatus): Booking
     fun delete(booking: Booking)
-    fun countActiveByRoomId(roomId: Int, endAfter: LocalDateTime): Int
+    fun countActiveByRoomId(roomId: Int, now: LocalDateTime): Int
+    fun countActiveForUserDeletion(userId: Int, now: LocalDateTime): Int
     fun clearRoomReferences(roomId: Int)
+    fun clearUserReferences(userId: Int)
     fun countByStatusAndDateRange(status: BookingStatus, start: LocalDateTime, end: LocalDateTime): Int
 }
 
@@ -129,11 +133,15 @@ class BookingRepositoryImpl : BookingRepository {
         booking.delete()
     }
 
-    override fun countActiveByRoomId(roomId: Int, endAfter: LocalDateTime): Int {
+    override fun countActiveByRoomId(roomId: Int, now: LocalDateTime): Int {
         return Booking.find {
-            (Bookings.room eq roomId) and
-                (Bookings.status inList listOf(BookingStatus.RESERVED, BookingStatus.CHECKED_IN)) and
-                (Bookings.end greater endAfter)
+            (Bookings.room eq roomId) and activeForUserDeletionPredicate(now)
+        }.count().toInt()
+    }
+
+    override fun countActiveForUserDeletion(userId: Int, now: LocalDateTime): Int {
+        return Booking.find {
+            (Bookings.user eq userId) and activeForUserDeletionPredicate(now)
         }.count().toInt()
     }
 
@@ -142,6 +150,16 @@ class BookingRepositoryImpl : BookingRepository {
             it[room] = null
         }
     }
+
+    override fun clearUserReferences(userId: Int) {
+        Bookings.update({ Bookings.user eq userId }) {
+            it[user] = null
+        }
+    }
+
+    private fun activeForUserDeletionPredicate(now: LocalDateTime) =
+        (Bookings.status eq BookingStatus.RESERVED) or
+            ((Bookings.status eq BookingStatus.CHECKED_IN) and (Bookings.end greaterEq now))
 
     override fun countByStatusAndDateRange(
         status: BookingStatus,

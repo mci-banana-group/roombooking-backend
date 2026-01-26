@@ -18,7 +18,6 @@ class BookingService(
     private val roomRepository: RoomRepository,
     private val userRepository: UserRepository,
 ) {
-
     fun getBookingsForUser(userId: Int): List<BookingResponse> = transaction {
         bookingRepository.findByUserId(userId).map { it.toResponse() }
     }
@@ -57,7 +56,7 @@ class BookingService(
         val existingBooking =
             bookingRepository.findById(bookingId) ?: throw IllegalArgumentException("Booking not found")
 
-        if (existingBooking.user.id.value != userId) {
+        if (existingBooking.user?.id?.value != userId) {
             throw IllegalAccessException("You are not authorized to update this booking")
         }
 
@@ -92,7 +91,7 @@ class BookingService(
         val existingBooking =
             bookingRepository.findById(bookingId) ?: throw IllegalArgumentException("Booking not found")
 
-        if (existingBooking.user.id.value != userId) {
+        if (existingBooking.user?.id?.value != userId) {
             throw IllegalAccessException("You are not authorized to cancel this booking")
         }
 
@@ -107,7 +106,7 @@ class BookingService(
         val existingBooking =
             bookingRepository.findById(checkInRequest.bookingId) ?: throw IllegalArgumentException("Booking not found")
 
-        if (existingBooking.user.id.value != userId) {
+        if (existingBooking.user?.id?.value != userId) {
             throw IllegalAccessException("You are not authorized to check in for this booking")
         }
 

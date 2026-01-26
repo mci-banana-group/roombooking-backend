@@ -124,11 +124,11 @@ fun Route.bookingRoutes(bookingService: BookingService) {
          * @response 409 text/plain Booking already cancelled
          * @response 500 text/plain Internal server error
          */
-        post("/{bookingId}/cancel") {
+        patch("/{bookingId}/cancel") {
             val bookingId = call.parameters["bookingId"]?.toIntOrNull()
             if (bookingId == null) {
                 call.respondText(text = "Invalid Booking ID", status = HttpStatusCode.BadRequest)
-                return@post
+                return@patch
             }
 
             runCatching {

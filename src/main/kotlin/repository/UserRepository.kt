@@ -8,6 +8,9 @@ import edu.mci.model.db.Users
 interface UserRepository {
     fun findById(id: Int): User?
     fun findByEmail(email: String): User?
+    fun findAll(): List<User>
+    fun updateRoleAndPermission(user: User, role: Role?, permissionLevel: PermissionLevel?): User
+    fun delete(user: User)
     fun create(
         email: String,
         password: String,
@@ -21,6 +24,21 @@ interface UserRepository {
 class UserRepositoryImpl : UserRepository {
     override fun findById(id: Int): User? = User.findById(id)
     override fun findByEmail(email: String): User? = User.find { Users.email eq email }.firstOrNull()
+    override fun findAll(): List<User> = User.all().toList()
+
+    override fun updateRoleAndPermission(user: User, role: Role?, permissionLevel: PermissionLevel?): User {
+        if (role != null) {
+            user.role = role
+        }
+        if (permissionLevel != null) {
+            user.permissionLevel = permissionLevel
+        }
+        return user
+    }
+
+    override fun delete(user: User) {
+        user.delete()
+    }
 
     override fun create(
         email: String,
