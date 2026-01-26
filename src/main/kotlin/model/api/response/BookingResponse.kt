@@ -12,4 +12,5 @@ data class BookingResponse(
     val gracePeriodMin: Int,
     val status: String,
     val description: String,
+    val room: RoomResponse? = null,
 )
