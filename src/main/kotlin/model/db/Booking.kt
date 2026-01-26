@@ -51,4 +51,5 @@ fun Booking.toResponse() = BookingResponse(
     gracePeriodMin = this.gracePeriodMin,
     status = this.status.name,
     description = this.description,
+    room = this.room?.toResponse(),
 )
