@@ -65,6 +65,21 @@ class MqttService(
         publishMessage(topic, "ON")
     }
 
+    fun publishLockDoor(roomId: Int) {
+        val topic = "room/$roomId/door"
+        publishMessage(topic, "LOCK")
+    }
+
+    fun publishTurnOffLight(roomId: Int) {
+        val topic = "room/$roomId/light"
+        publishMessage(topic, "OFF")
+    }
+
+    fun publishTurnOffHVAC(roomId: Int) {
+        val topic = "room/$roomId/hvac"
+        publishMessage(topic, "OFF")
+    }
+
     private fun publishMessage(topic: String, payload: String) {
         try {
             if (client == null || !client!!.isConnected) {

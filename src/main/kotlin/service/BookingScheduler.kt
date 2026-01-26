@@ -23,6 +23,7 @@ class BookingScheduler(
             while (isActive) {
                 try {
                     checkExpiredBookings()
+                    checkCompletedBookings()
                     verifyCheckInWindow()
                 } catch (e: Exception) {
                     logger.error("Error checking expired bookings", e)
@@ -41,6 +42,28 @@ class BookingScheduler(
                 expiredBookings.forEach { booking ->
                     logger.info("Marking booking ${booking.id} as NO_SHOW")
                     bookingRepository.updateStatus(booking, BookingStatus.NO_SHOW)
+                }
+            }
+        }
+    }
+
+    private fun checkCompletedBookings() {
+        transaction {
+            val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+            val completedBookings = bookingRepository.findCompletedBookings(now)
+            if (completedBookings.isNotEmpty()) {
+                logger.info("Found ${completedBookings.size} completed bookings")
+                completedBookings.forEach { booking ->
+                    logger.info("Marking booking ${booking.id} as COMPLETED")
+                    bookingRepository.updateStatus(booking, BookingStatus.COMPLETED)
+                    
+                    val room = booking.room
+                    if (room != null) {
+                        logger.info("Triggering MQTT off/lock messages for room ${room.id.value}")
+                        mqttService.publishLockDoor(room.id.value)
+                        mqttService.publishTurnOffLight(room.id.value)
+                        mqttService.publishTurnOffHVAC(room.id.value)
+                    }
                 }
             }
         }
