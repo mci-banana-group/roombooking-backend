@@ -16,7 +16,7 @@ fun Route.bookingRoutes(bookingService: BookingService) {
          * Get all bookings for the currently authenticated user.
          *
          * @tag Bookings
-         * @description Timestamps in ISO-8601 UTC Strings: 2026-01-14T12:34:56Z. - Status values: RESERVED, CANCELLED, CHECKED_IN, NO_SHOW. - User roles: STUDENT, STAFF, LECTURER.
+         * @description Timestamps in ISO-8601 UTC Strings: 2026-01-14T12:34:56Z. - Status values: RESERVED, CANCELLED, ADMIN_CANCELLED, CHECKED_IN, NO_SHOW. - User roles: STUDENT, STAFF, LECTURER.
          * @response 200 application/json [BookingResponse] List of bookings for the user.
          * @response 500 text/plain Internal server error
          */
@@ -34,7 +34,7 @@ fun Route.bookingRoutes(bookingService: BookingService) {
          * Create a new booking.
          *
          * @tag Bookings
-         * @description Timestamps in ISO-8601 UTC Strings: 2026-01-14T12:34:56Z. - Status values: RESERVED, CANCELLED, CHECKED_IN, NO_SHOW. - User roles: STUDENT, STAFF, LECTURER.
+         * @description Timestamps in ISO-8601 UTC Strings: 2026-01-14T12:34:56Z. - Status values: RESERVED, CANCELLED, ADMIN_CANCELLED, CHECKED_IN, NO_SHOW. - User roles: STUDENT, STAFF, LECTURER.
          * @body application/json [CreateBookingRequest] Details of the booking to create.
          * @response 201 application/json [BookingResponse] Booking created successfully.
          * @response 400 text/plain Invalid request data or room/user not found
@@ -70,7 +70,7 @@ fun Route.bookingRoutes(bookingService: BookingService) {
          * Update an existing booking.
          *
          * @tag Bookings
-         * @description Timestamps in ISO-8601 UTC Strings: 2026-01-14T12:34:56Z. - Status values: RESERVED, CANCELLED, CHECKED_IN, NO_SHOW. - User roles: STUDENT, STAFF, LECTURER.
+         * @description Timestamps in ISO-8601 UTC Strings: 2026-01-14T12:34:56Z. - Status values: RESERVED, CANCELLED, ADMIN_CANCELLED, CHECKED_IN, NO_SHOW. - User roles: STUDENT, STAFF, LECTURER.
          * @path bookingId [Int] The ID of the booking to update
          * @body application/json [CreateBookingRequest] Updated booking details.
          * @response 202 application/json [BookingResponse] Booking updated successfully.
@@ -111,28 +111,30 @@ fun Route.bookingRoutes(bookingService: BookingService) {
             }
         }
 
+
         /**
-         * Delete a booking.
+         * Cancel a booking. Users can only cancel their own bookings.
          *
          * @tag Bookings
-         * @path bookingId [Int] The ID of the booking to delete
-         * @response 204 Booking deleted successfully
+         * @path bookingId [Int] The ID of the booking to cancel
+         * @response 200 Booking cancelled successfully
          * @response 400 text/plain Invalid booking ID
-         * @response 403 text/plain Unauthorized to delete this booking
+         * @response 403 text/plain Unauthorized to cancel this booking
          * @response 404 text/plain Booking not found
+         * @response 409 text/plain Booking already cancelled
          * @response 500 text/plain Internal server error
          */
-        delete("/{bookingId}") {
+        patch("/{bookingId}/cancel") {
             val bookingId = call.parameters["bookingId"]?.toIntOrNull()
             if (bookingId == null) {
                 call.respondText(text = "Invalid Booking ID", status = HttpStatusCode.BadRequest)
-                return@delete
+                return@patch
             }
 
             runCatching {
-                bookingService.deleteBooking(call.getUserId(), bookingId)
+                bookingService.cancelBooking(call.getUserId(), bookingId)
             }.onSuccess {
-                call.respond(HttpStatusCode.NoContent)
+                call.respond(HttpStatusCode.OK)
             }.onFailure { e ->
                 when (e) {
                     is IllegalArgumentException -> call.respondText(
@@ -143,6 +145,11 @@ fun Route.bookingRoutes(bookingService: BookingService) {
                     is IllegalAccessException -> call.respondText(
                         e.message ?: "Forbidden",
                         status = HttpStatusCode.Forbidden
+                    )
+
+                    is IllegalStateException -> call.respondText(
+                        e.message ?: "Conflict",
+                        status = HttpStatusCode.Conflict
                     )
 
                     else -> call.respondText(

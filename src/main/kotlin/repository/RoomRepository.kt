@@ -1,8 +1,10 @@
 package edu.mci.repository
 
+import edu.mci.model.db.Building
 import edu.mci.model.db.EquipmentType
 import edu.mci.model.db.Room
 import edu.mci.model.db.RoomEquipmentItems
+import edu.mci.model.db.RoomStatus
 import edu.mci.model.db.Rooms
 import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.andWhere
@@ -12,6 +14,29 @@ import org.jetbrains.exposed.sql.selectAll
 interface RoomRepository {
     fun findById(id: Int): Room?
     fun findAll(capacity: Int?, buildingId: Int?, requiredEquipment: List<String>): List<Room>
+    fun countByBuildingId(buildingId: Int): Long
+    fun create(
+        roomNumber: Int,
+        name: String,
+        description: String,
+        status: RoomStatus,
+        confirmationCode: String,
+        capacity: Int,
+        building: Building
+    ): Room
+
+    fun update(
+        room: Room,
+        roomNumber: Int,
+        name: String,
+        description: String,
+        status: RoomStatus,
+        confirmationCode: String,
+        capacity: Int,
+        building: Building
+    ): Room
+
+    fun delete(room: Room)
 }
 
 class RoomRepositoryImpl : RoomRepository {
@@ -39,4 +64,52 @@ class RoomRepositoryImpl : RoomRepository {
 
         return Room.wrapRows(query).with(Room::equipment).toList()
     }
+
+    override fun countByBuildingId(buildingId: Int): Long =
+        Rooms.selectAll()
+            .where { Rooms.building eq buildingId }
+            .count()
+
+    override fun create(
+        roomNumber: Int,
+        name: String,
+        description: String,
+        status: RoomStatus,
+        confirmationCode: String,
+        capacity: Int,
+        building: Building
+    ): Room = Room.new {
+        this.roomNumber = roomNumber
+        this.name = name
+        this.description = description
+        this.status = status
+        this.confirmationCode = confirmationCode
+        this.capacity = capacity
+        this.building = building
+    }
+
+    override fun update(
+        room: Room,
+        roomNumber: Int,
+        name: String,
+        description: String,
+        status: RoomStatus,
+        confirmationCode: String,
+        capacity: Int,
+        building: Building
+    ): Room {
+        room.roomNumber = roomNumber
+        room.name = name
+        room.description = description
+        room.status = status
+        room.confirmationCode = confirmationCode
+        room.capacity = capacity
+        room.building = building
+        return room
+    }
+
+    override fun delete(room: Room) {
+        room.delete()
+    }
+
 }

@@ -30,6 +30,7 @@ class AuthService(
             .withAudience(jwtAudience)
             .withIssuer(jwtIssuer)
             .withClaim("userId", user.id.value)
+            .withClaim("permissionLevel", user.permissionLevel.name)
             .sign(Algorithm.HMAC256(jwtSecret))
 
         return LoginResponse(

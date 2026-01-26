@@ -10,13 +10,14 @@ import edu.mci.repository.RoomRepository
 import edu.mci.repository.UserRepository
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlinx.datetime.Clock.System.now
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 
 class BookingService(
     private val bookingRepository: BookingRepository,
     private val roomRepository: RoomRepository,
     private val userRepository: UserRepository,
 ) {
-
     fun getBookingsForUser(userId: Int): List<BookingResponse> = transaction {
         bookingRepository.findByUserId(userId).map { it.toResponse() }
     }
@@ -55,7 +56,7 @@ class BookingService(
         val existingBooking =
             bookingRepository.findById(bookingId) ?: throw IllegalArgumentException("Booking not found")
 
-        if (existingBooking.user.id.value != userId) {
+        if (existingBooking.user?.id?.value != userId) {
             throw IllegalAccessException("You are not authorized to update this booking")
         }
 
@@ -71,27 +72,49 @@ class BookingService(
         ).toResponse()
     }
 
-    fun deleteBooking(userId: Int, bookingId: Int) = transaction {
+    fun adminCancelBooking(bookingId: Int) = transaction {
         val existingBooking =
             bookingRepository.findById(bookingId) ?: throw IllegalArgumentException("Booking not found")
 
-        if (existingBooking.user.id.value != userId) {
-            throw IllegalAccessException("You are not authorized to delete this booking")
+        if (existingBooking.end.toInstant(TimeZone.UTC) <= now()) {
+            throw IllegalStateException("Booking is in the past and cannot be cancelled")
         }
 
-        bookingRepository.delete(existingBooking)
+        if (existingBooking.status == BookingStatus.CANCELLED || existingBooking.status == BookingStatus.ADMIN_CANCELLED) {
+            throw IllegalStateException("Booking is already cancelled")
+        }
+
+        bookingRepository.updateStatus(existingBooking, BookingStatus.ADMIN_CANCELLED)
+    }
+
+    fun cancelBooking(userId: Int, bookingId: Int) = transaction {
+        val existingBooking =
+            bookingRepository.findById(bookingId) ?: throw IllegalArgumentException("Booking not found")
+
+        if (existingBooking.user?.id?.value != userId) {
+            throw IllegalAccessException("You are not authorized to cancel this booking")
+        }
+
+        if (existingBooking.status == BookingStatus.CANCELLED) {
+            throw IllegalStateException("Booking is already cancelled")
+        }
+
+        bookingRepository.updateStatus(existingBooking, BookingStatus.CANCELLED)
     }
 
     fun checkIn(userId: Int, checkInRequest: CheckInRequest) = transaction {
         val existingBooking =
             bookingRepository.findById(checkInRequest.bookingId) ?: throw IllegalArgumentException("Booking not found")
 
-        if (existingBooking.user.id.value != userId) {
+        if (existingBooking.user?.id?.value != userId) {
             throw IllegalAccessException("You are not authorized to check in for this booking")
         }
 
+        val roomConfirmationCode = existingBooking.room?.confirmationCode
+            ?: throw IllegalArgumentException("Room not found")
+
         // Either booking confirmation code (dynamic) or room confirmation code (static fallback) must match
-        if (existingBooking.confirmationCode != checkInRequest.code && existingBooking.room.confirmationCode != checkInRequest.code) {
+        if (existingBooking.confirmationCode != checkInRequest.code && roomConfirmationCode != checkInRequest.code) {
             throw IllegalArgumentException("Confirmation Code Not Matching")
         }
 

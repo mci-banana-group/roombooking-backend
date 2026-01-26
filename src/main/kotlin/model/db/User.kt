@@ -28,6 +28,7 @@ class User(id: EntityID<Int>) : IntEntity(id) {
 }
 
 fun User.toResponse() = UserResponse(
+    id = this.id.value,
     firstName = this.firstName,
     lastName = this.lastName,
     email = this.email,
@@ -40,6 +41,7 @@ fun User.toResponse() = UserResponse(
     },
     isAdmin = this.permissionLevel == PermissionLevel.ADMIN
 )
+
 
 enum class Role {
     STUDENT, LECTURER, STAFF
