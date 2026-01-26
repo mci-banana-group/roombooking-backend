@@ -9,6 +9,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 object RoomEquipmentItems : IntIdTable() {
     val quantity = integer("quantity")
     val type = enumerationByName("type", 20, EquipmentType::class)
+    val description = varchar("description", 255).nullable()
     val room = reference("room_id", Rooms)
 }
 
@@ -17,15 +18,17 @@ class RoomEquipmentItem(id: EntityID<Int>) : IntEntity(id) {
 
     var quantity by RoomEquipmentItems.quantity
     var type by RoomEquipmentItems.type
+    var description by RoomEquipmentItems.description
     var room by Room referencedOn RoomEquipmentItems.room
 }
 
 enum class EquipmentType {
-    BEAMER, HDMI_CABLE, WHITEBOARD, DISPLAY
+    BEAMER, HDMI_CABLE, WHITEBOARD, DISPLAY, OTHER
 }
 
 fun RoomEquipmentItem.toResponse() = EquipmentResponse(
     id = id.value,
     name = type.name,
     quantity = quantity,
+    description = description,
 )
