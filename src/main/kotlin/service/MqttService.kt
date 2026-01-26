@@ -50,5 +50,56 @@ class MqttService(
         }
     }
 
+    fun publishUnlockDoor(roomId: Int) {
+        val topic = "room/$roomId/door"
+        publishMessage(topic, "UNLOCK")
+    }
 
+    fun publishTurnOnLight(roomId: Int) {
+        val topic = "room/$roomId/light"
+        publishMessage(topic, "ON")
+    }
+
+    fun publishTurnOnHVAC(roomId: Int) {
+        val topic = "room/$roomId/hvac"
+        publishMessage(topic, "ON")
+    }
+
+    fun publishLockDoor(roomId: Int) {
+        val topic = "room/$roomId/door"
+        publishMessage(topic, "LOCK")
+    }
+
+    fun publishTurnOffLight(roomId: Int) {
+        val topic = "room/$roomId/light"
+        publishMessage(topic, "OFF")
+    }
+
+    fun publishTurnOffHVAC(roomId: Int) {
+        val topic = "room/$roomId/hvac"
+        publishMessage(topic, "OFF")
+    }
+
+    private fun publishMessage(topic: String, payload: String) {
+        try {
+            if (client == null || !client!!.isConnected) {
+                logger.warn("MQTT client not connected, attempting to (re)connect...")
+                connect()
+            }
+            if (client?.isConnected == true) {
+                val message = org.eclipse.paho.client.mqttv3.MqttMessage(payload.toByteArray())
+                message.qos = 1
+                message.isRetained = false
+                client?.publish(topic, message)
+                logger.info("Published $payload to $topic")
+            } else {
+                logger.error("Could not publish to $topic: Client not connected")
+            }
+        } catch (e: Exception) {
+            logger.error("Error publishing to $topic", e)
+        }
+
+
+
+}
 }

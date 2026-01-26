@@ -60,7 +60,11 @@ fun Application.module() {
 
     configureAuth(jwtSecret, jwtIssuer, jwtAudience, jwtRealm)
 
-    val bookingService = BookingService(bookingRepository, roomRepository, userRepository)
+    val mqttBrokerUrl = environment.config.property("mqtt.brokerUrl").getString()
+    val mqttClientId = environment.config.property("mqtt.clientId").getString()
+    val mqttService = MqttService(mqttBrokerUrl, mqttClientId)
+
+    val bookingService = BookingService(bookingRepository, roomRepository, userRepository, mqttService)
     val roomService = RoomService(
         roomRepository,
         bookingRepository,
@@ -76,9 +80,7 @@ fun Application.module() {
         notificationRepository,
         passwordService
     )
-    val mqttBrokerUrl = environment.config.property("mqtt.brokerUrl").getString()
-    val mqttClientId = environment.config.property("mqtt.clientId").getString()
-    val mqttService = MqttService(mqttBrokerUrl, mqttClientId)
+
 
     val bookingScheduler = BookingScheduler(bookingRepository, mqttService)
     bookingScheduler.start()

@@ -16,6 +16,7 @@ interface BookingRepository {
     fun findOverlappingBookings(roomId: Int, start: Instant, end: Instant): List<Booking>
     fun findExpiredReservations(dateTime: LocalDateTime): List<Booking>
     fun findBookingsCheckInWindow(dateTime: LocalDateTime): List<Booking>
+    fun findCompletedBookings(dateTime: LocalDateTime): List<Booking>
     fun create(
         user: User,
         room: Room,
@@ -90,6 +91,12 @@ class BookingRepositoryImpl : BookingRepository {
         }
     }
 
+    override fun findCompletedBookings(dateTime: LocalDateTime): List<Booking> {
+        return Booking.find {
+            (Bookings.status eq BookingStatus.CHECKED_IN) and (Bookings.end lessEq dateTime)
+        }.toList()
+    }
+
     override fun create(
         user: User,
         room: Room,
@@ -158,8 +165,7 @@ class BookingRepositoryImpl : BookingRepository {
     }
 
     private fun activeForUserDeletionPredicate(now: LocalDateTime) =
-        (Bookings.status eq BookingStatus.RESERVED) or
-            ((Bookings.status eq BookingStatus.CHECKED_IN) and (Bookings.end greaterEq now))
+        (Bookings.status eq BookingStatus.RESERVED) or (Bookings.status eq BookingStatus.CHECKED_IN)
 
     override fun countByStatusAndDateRange(
         status: BookingStatus,
