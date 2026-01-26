@@ -1,5 +1,6 @@
 package edu.mci.model.db
 
+import edu.mci.model.api.response.AdminRoomResponse
 import edu.mci.model.api.response.RoomResponse
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -40,6 +41,20 @@ fun Room.toResponse() = RoomResponse(
     description = this.description,
     status = this.status.name,
     capacity = this.capacity,
+    equipment = this.equipment.map {
+        it.toResponse()
+    },
+    building = this.building?.toResponse()
+)
+
+fun Room.toAdminResponse() = AdminRoomResponse(
+    id = this.id.value,
+    roomNumber = this.roomNumber,
+    name = this.name,
+    description = this.description,
+    status = this.status.name,
+    capacity = this.capacity,
+    confirmationCode = this.confirmationCode,
     equipment = this.equipment.map {
         it.toResponse()
     },

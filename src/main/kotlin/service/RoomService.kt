@@ -3,6 +3,7 @@ package edu.mci.service
 import edu.mci.model.api.request.CreateRoomRequest
 import edu.mci.model.api.request.UpdateRoomRequest
 import edu.mci.model.api.request.RoomEquipmentRequest
+import edu.mci.model.api.response.AdminRoomResponse
 import edu.mci.model.api.response.EquipmentResponse
 import edu.mci.model.api.response.RoomDeletionBlocker
 import edu.mci.model.api.response.RoomDeletionConflictResponse
@@ -14,6 +15,7 @@ import edu.mci.model.db.Room
 import edu.mci.model.db.RoomEquipmentItem
 import edu.mci.model.db.RoomEquipmentItems
 import edu.mci.model.db.RoomStatus
+import edu.mci.model.db.toAdminResponse
 import edu.mci.model.db.toResponse
 import edu.mci.repository.BookingRepository
 import edu.mci.repository.BuildingRepository
@@ -63,6 +65,22 @@ class RoomService(
                 room = room.toResponse(),
                 bookings = bookings
             )
+        }
+    }
+
+    fun getAllRoomsForAdmin(
+        capacity: Int?,
+        buildingId: Int?,
+        requiredEquipment: List<String>,
+    ): List<AdminRoomResponse> = transaction {
+        if (requiredEquipment.isNotEmpty()) {
+            val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+            requiredEquipment.forEach {
+                searchedItemRepository.recordSearch(it, now)
+            }
+        }
+        roomRepository.findAll(capacity, buildingId, requiredEquipment).map { room ->
+            room.toAdminResponse()
         }
     }
 

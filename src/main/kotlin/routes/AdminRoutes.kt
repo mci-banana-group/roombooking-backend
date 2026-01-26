@@ -7,6 +7,7 @@ import edu.mci.model.api.request.UpdateBuildingRequest
 import edu.mci.model.api.request.UpdateRoomRequest
 import edu.mci.model.api.request.UpdateUserRoleRequest
 import edu.mci.model.api.response.AdminDashboardResponse
+import edu.mci.model.api.response.AdminRoomResponse
 import edu.mci.service.AdminService
 import edu.mci.service.AdminUserService
 import edu.mci.service.BookingService
@@ -454,6 +455,44 @@ fun Route.adminRoutes(
                     )
                 }
             }
+        }
+
+        /**
+         * Get all rooms with confirmation codes. Only accessible by admins.
+         *
+         * @tag Admin
+         * @query capacity [Int] Filter rooms by minimum capacity
+         * @query equipment [String] Comma-separated list of required equipment types. Values: BEAMER, HDMI_CABLE, WHITEBOARD, DISPLAY
+         * @query buildingId [Int] Filter rooms by building ID
+         * @response 200 application/json [AdminRoomResponse] List of rooms matching the filters.
+         * @response 400 text/plain Invalid capacity format
+         * @response 401 text/plain Unauthorized
+         * @response 403 text/plain Forbidden (not an admin)
+         */
+        get("/rooms") {
+            if (!call.isAdmin()) {
+                call.respondText(text = "Only admins can access rooms", status = HttpStatusCode.Forbidden)
+                return@get
+            }
+
+            val queryParameters = call.request.queryParameters
+            val capacity = runCatching {
+                queryParameters["capacity"]?.toInt()
+            }.onFailure {
+                call.respond(HttpStatusCode.BadRequest, "capacity has to be an integer")
+                return@get
+            }.getOrThrow()
+
+            val equipment = queryParameters["equipment"]?.split(",") ?: emptyList()
+            val buildingId = queryParameters["buildingId"]?.toIntOrNull()
+
+            val rooms = roomService.getAllRoomsForAdmin(
+                capacity = capacity,
+                buildingId = buildingId,
+                requiredEquipment = equipment
+            )
+
+            call.respond(rooms)
         }
 
         /**
