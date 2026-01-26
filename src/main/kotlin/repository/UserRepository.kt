@@ -9,7 +9,7 @@ interface UserRepository {
     fun findById(id: Int): User?
     fun findByEmail(email: String): User?
     fun findAll(): List<User>
-    fun updateRoleAndPermission(user: User, role: Role, permissionLevel: PermissionLevel): User
+    fun updateRoleAndPermission(user: User, role: Role?, permissionLevel: PermissionLevel?): User
     fun delete(user: User)
     fun create(
         email: String,
@@ -26,9 +26,13 @@ class UserRepositoryImpl : UserRepository {
     override fun findByEmail(email: String): User? = User.find { Users.email eq email }.firstOrNull()
     override fun findAll(): List<User> = User.all().toList()
 
-    override fun updateRoleAndPermission(user: User, role: Role, permissionLevel: PermissionLevel): User {
-        user.role = role
-        user.permissionLevel = permissionLevel
+    override fun updateRoleAndPermission(user: User, role: Role?, permissionLevel: PermissionLevel?): User {
+        if (role != null) {
+            user.role = role
+        }
+        if (permissionLevel != null) {
+            user.permissionLevel = permissionLevel
+        }
         return user
     }
 

@@ -159,7 +159,7 @@ fun Route.adminRoutes(
          *
          * @tag Admin
          * @path userId [Int] The ID of the user to update.
-         * @body application/json [UpdateUserRoleRequest] Role and permission update request.
+         * @body application/json [UpdateUserRoleRequest] Role and/or permission update request.
          * @response 200 application/json [UserResponse] User updated successfully.
          * @response 400 text/plain Invalid request data
          * @response 401 text/plain Unauthorized
@@ -189,6 +189,11 @@ fun Route.adminRoutes(
                     is UserNotFoundException -> call.respondText(
                         e.message ?: "Not Found",
                         status = HttpStatusCode.NotFound
+                    )
+
+                    is UserValidationException -> call.respondText(
+                        e.message ?: "Bad Request",
+                        status = HttpStatusCode.BadRequest
                     )
 
                     else -> call.respondText(
@@ -221,6 +226,14 @@ fun Route.adminRoutes(
             val userId = call.parameters["userId"]?.toIntOrNull()
             if (userId == null) {
                 call.respondText(text = "Invalid User ID", status = HttpStatusCode.BadRequest)
+                return@delete
+            }
+
+            if (call.getUserId() == userId) {
+                call.respondText(
+                    text = "Admins cannot delete their own account",
+                    status = HttpStatusCode.Forbidden
+                )
                 return@delete
             }
 

@@ -42,6 +42,9 @@ class AdminUserService(
 
     fun updateRole(userId: Int, request: UpdateUserRoleRequest): UserResponse = transaction {
         val user = userRepository.findById(userId) ?: throw UserNotFoundException("User not found")
+        if (request.role == null && request.permissionLevel == null) {
+            throw UserValidationException("Role or permission level is required")
+        }
         userRepository.updateRoleAndPermission(user, request.role, request.permissionLevel).toResponse()
     }
 

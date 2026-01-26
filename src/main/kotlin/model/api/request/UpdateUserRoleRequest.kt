@@ -6,6 +6,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UpdateUserRoleRequest(
-    val role: Role,
-    val permissionLevel: PermissionLevel
+    val role: Role? = null,
+    val permissionLevel: PermissionLevel? = null
 )
