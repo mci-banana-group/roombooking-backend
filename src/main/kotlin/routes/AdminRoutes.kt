@@ -38,24 +38,20 @@ fun Route.adminRoutes(
     buildingService: BuildingService
 ) {
     route("/admin") {
-        /**
-         * Get dashboard statistics for admins.
-         *
-         * @tag Admin
-         * @query start [String] Start date-time (ISO 8601). Format: 2026-01-01T00:00:00
-         * @query end [String] End date-time (ISO 8601). Format: 2026-01-31T23:59:59
-         * @query limit [Int] Max number of most searched items to return (default 10, max 100).
-         * @response 200 application/json [AdminDashboardResponse] Statistics for the dashboard.
-         * @response 401 text/plain Unauthorized
-         * @response 403 text/plain Forbidden (not an admin)
-         * @response 400 text/plain Invalid date format or limit
-         */
-        get("/stats") {
-            if (!call.isAdmin()) {
-                call.respond(HttpStatusCode.Forbidden, "Only admins can access this resource")
-                return@get
-            }
-
+        authenticateAdmin {
+            /**
+             * Get dashboard statistics for admins.
+             *
+             * @tag Admin
+             * @query start [String] Start date-time (ISO 8601). Format: 2026-01-01T00:00:00
+             * @query end [String] End date-time (ISO 8601). Format: 2026-01-31T23:59:59
+             * @query limit [Int] Max number of most searched items to return (default 10, max 100).
+             * @response 200 application/json [AdminDashboardResponse] Statistics for the dashboard.
+             * @response 401 text/plain Unauthorized
+             * @response 403 text/plain Forbidden (not an admin)
+             * @response 400 text/plain Invalid date format or limit
+             */
+            get("/stats") {
             val queryParams = call.request.queryParameters
             val startStr = queryParams["start"]
             val endStr = queryParams["end"]
@@ -98,11 +94,6 @@ fun Route.adminRoutes(
          * @response 500 text/plain Internal server error
          */
         post("/users") {
-            if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can create users", status = HttpStatusCode.Forbidden)
-                return@post
-            }
-
             runCatching {
                 val request = call.receive<CreateUserRequest>()
                 adminUserService.createUser(request)
@@ -138,11 +129,6 @@ fun Route.adminRoutes(
          * @response 500 text/plain Internal server error
          */
         get("/users") {
-            if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can access users", status = HttpStatusCode.Forbidden)
-                return@get
-            }
-
             runCatching {
                 adminUserService.getAllUsers()
             }.onSuccess { users ->
@@ -169,11 +155,6 @@ fun Route.adminRoutes(
          * @response 500 text/plain Internal server error
          */
         patch("/users/{userId}/role") {
-            if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can update user roles", status = HttpStatusCode.Forbidden)
-                return@patch
-            }
-
             val userId = call.parameters["userId"]?.toIntOrNull()
             if (userId == null) {
                 call.respondText(text = "Invalid User ID", status = HttpStatusCode.BadRequest)
@@ -219,11 +200,6 @@ fun Route.adminRoutes(
          * @response 500 text/plain Internal server error
          */
         delete("/users/{userId}") {
-            if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can delete users", status = HttpStatusCode.Forbidden)
-                return@delete
-            }
-
             val userId = call.parameters["userId"]?.toIntOrNull()
             if (userId == null) {
                 call.respondText(text = "Invalid User ID", status = HttpStatusCode.BadRequest)
@@ -275,11 +251,6 @@ fun Route.adminRoutes(
          * @response 500 text/plain Internal server error
          */
         post("/buildings") {
-            if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can create buildings", status = HttpStatusCode.Forbidden)
-                return@post
-            }
-
             runCatching {
                 val request = call.receive<CreateBuildingRequest>()
                 buildingService.createBuilding(request.name, request.address)
@@ -320,11 +291,6 @@ fun Route.adminRoutes(
          * @response 500 text/plain Internal server error
          */
         put("/buildings/{buildingId}") {
-            if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can update buildings", status = HttpStatusCode.Forbidden)
-                return@put
-            }
-
             val buildingId = call.parameters["buildingId"]?.toIntOrNull()
             if (buildingId == null) {
                 call.respondText(text = "Invalid Building ID", status = HttpStatusCode.BadRequest)
@@ -375,11 +341,6 @@ fun Route.adminRoutes(
          * @response 500 text/plain Internal server error
          */
         delete("/buildings/{buildingId}") {
-            if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can delete buildings", status = HttpStatusCode.Forbidden)
-                return@delete
-            }
-
             val buildingId = call.parameters["buildingId"]?.toIntOrNull()
             if (buildingId == null) {
                 call.respondText(text = "Invalid Building ID", status = HttpStatusCode.BadRequest)
@@ -423,11 +384,6 @@ fun Route.adminRoutes(
          * @response 500 text/plain Internal server error
          */
         patch("/bookings/{bookingId}/cancel") {
-            if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can cancel bookings", status = HttpStatusCode.Forbidden)
-                return@patch
-            }
-
             val bookingId = call.parameters["bookingId"]?.toIntOrNull()
             if (bookingId == null) {
                 call.respondText(text = "Invalid Booking ID", status = HttpStatusCode.BadRequest)
@@ -470,11 +426,6 @@ fun Route.adminRoutes(
          * @response 403 text/plain Forbidden (not an admin)
          */
         get("/rooms") {
-            if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can access rooms", status = HttpStatusCode.Forbidden)
-                return@get
-            }
-
             val queryParameters = call.request.queryParameters
             val capacity = runCatching {
                 queryParameters["capacity"]?.toInt()
@@ -508,11 +459,6 @@ fun Route.adminRoutes(
          * @response 500 text/plain Internal server error
          */
         post("/rooms") {
-            if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can create rooms", status = HttpStatusCode.Forbidden)
-                return@post
-            }
-
             runCatching {
                 val request = call.receive<CreateRoomRequest>()
                 roomService.createRoom(request)
@@ -552,11 +498,6 @@ fun Route.adminRoutes(
          * @response 500 text/plain Internal server error
          */
         put("/rooms/{roomId}") {
-            if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can update rooms", status = HttpStatusCode.Forbidden)
-                return@put
-            }
-
             val roomId = call.parameters["roomId"]?.toIntOrNull()
             if (roomId == null) {
                 call.respondText(text = "Invalid Room ID", status = HttpStatusCode.BadRequest)
@@ -602,11 +543,6 @@ fun Route.adminRoutes(
          * @response 500 text/plain Internal server error
          */
         delete("/rooms/{roomId}") {
-            if (!call.isAdmin()) {
-                call.respondText(text = "Only admins can delete rooms", status = HttpStatusCode.Forbidden)
-                return@delete
-            }
-
             val roomId = call.parameters["roomId"]?.toIntOrNull()
             if (roomId == null) {
                 call.respondText(text = "Invalid Room ID", status = HttpStatusCode.BadRequest)
@@ -637,4 +573,5 @@ fun Route.adminRoutes(
             }
         }
     }
+}
 }
