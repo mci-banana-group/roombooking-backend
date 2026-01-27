@@ -89,13 +89,6 @@ To build or run the project, use one of the following tasks:
 | `./gradlew run`                         | Run the server                                                       |
 | `./gradlew runDocker`                   | Run app + postgres using docker compose                              |
 
-As for now, when used with the PostgreSQL, the application will run with the following command:
-
-```bash
-docker compose up --build
-```
-
-The PostgreSQL data is persisted in the `postgres_data` volume (still local on your docker container!), so it survives restarts.
 
 If the server starts successfully, you'll see the following output:
 
@@ -104,6 +97,31 @@ If the server starts successfully, you'll see the following output:
 2024-12-04 14:32:45.682 [main] INFO  Application - Responding at http://0.0.0.0:8080
 ```
 
+## PostgreSQL Database
+As for now, when used with the PostgreSQL, the application will run with the following command:
+```bash
+docker compose up --build
+```
+
+The PostgreSQL data is persisted in the `postgres_data` volume (local on your docker), so it survives restarts.
+
+Tables, columns, and data are created (as for now) by the application when it starts for the first time.
+
+If you made changes and want to reset the database, you can delete the `postgres_data` volume and restart the application with the following commands:
+```bash
+docker compose down
+docker compose up -d
+```
+
+You can connect and manage the database using pgAdmin or the following command:
+```bash
+psql "host=127.0.0.1 port=5433 dbname=roombooking user=admin"
+```
+Or connecting through pgAdmin. Make sure to use the correct port number as it stands in the docker-compose.yml file (5433 for now).
+
+Use the following credentials to connect:
+- **Username**: `admin`
+- **Password**: `banana`
 
 ## MQTT Integration & Room Displays
 
