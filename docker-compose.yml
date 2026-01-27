@@ -1,0 +1,35 @@
+services:
+  app:
+    build:
+      context: .
+    container_name: roombooking-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/roombooking
+      DB_USER: admin
+      DB_PASSWORD: banana
+      DB_DRIVER: org.postgresql.Driver
+    ports:
+      - "8080:8080"
+
+  postgres:
+    image: postgres:16
+    container_name: roombooking-db
+    environment:
+      POSTGRES_DB: roombooking
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: banana
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d roombooking"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

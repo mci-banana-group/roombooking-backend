@@ -1,6 +1,7 @@
 FROM gradle:8-jdk17 AS build
 WORKDIR /app
 COPY . .
+RUN sed -i 's/\r$//' gradlew && chmod +x gradlew #converts CRLF endings to LF (UNIX-style), when using Windows.
 RUN ./gradlew clean build --no-daemon
 
 FROM eclipse-temurin:17-jre

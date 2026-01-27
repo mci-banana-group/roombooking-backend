@@ -87,7 +87,15 @@ To build or run the project, use one of the following tasks:
 | `./gradlew buildImage`                  | Build the docker image to use with the fat JAR                       |
 | `./gradlew publishImageToLocalRegistry` | Publish the docker image locally                                     |
 | `./gradlew run`                         | Run the server                                                       |
-| `./gradlew runDocker`                   | Run using the local docker image                                     |
+| `./gradlew runDocker`                   | Run app + postgres using docker compose                              |
+
+As for now, when used with the PostgreSQL, the application will run with the following command:
+
+```bash
+docker compose up --build
+```
+
+The PostgreSQL data is persisted in the `postgres_data` volume (still local on your docker container!), so it survives restarts.
 
 If the server starts successfully, you'll see the following output:
 

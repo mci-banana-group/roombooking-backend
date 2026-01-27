@@ -52,7 +52,7 @@ dependencies {
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.kotlin.datetime)
-    implementation(libs.h2)
+    implementation(libs.h2) //keeping for testing purposes
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
     implementation(libs.ktor.server.content.negotiation)
@@ -64,4 +64,5 @@ dependencies {
     implementation(libs.ktor.server.cors)
     implementation(libs.bcrypt)
     implementation(libs.paho.mqttv3)
+    implementation(libs.postgresql)
 }
