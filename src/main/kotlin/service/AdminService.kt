@@ -11,7 +11,12 @@ class AdminService(
     private val bookingRepository: BookingRepository,
     private val searchedItemRepository: SearchedItemRepository
 ) {
-    fun getDashboardStats(start: LocalDateTime, end: LocalDateTime, limit: Int): AdminDashboardResponse = transaction {
+    fun getDashboardStats(
+        start: LocalDateTime,
+        end: LocalDateTime,
+        equipmentLimit: Int,
+        roomLimit: Int
+    ): AdminDashboardResponse = transaction {
         val totalMeetings =
             bookingRepository.countAllByDateRangeByDay(start, end).mapKeys { (date, _) ->
                 date.toString()
@@ -47,12 +52,12 @@ class AdminService(
                 date.toString()
             }
 
-        val mostSearchedItems = searchedItemRepository.getMostSearchedItems(start, end, limit = limit)
+        val mostSearchedItems = searchedItemRepository.getMostSearchedItems(start, end, limit = equipmentLimit)
         val mostUsedRooms = bookingRepository.getMostUsedRoomsByOccupiedTime(
             statuses = listOf(BookingStatus.COMPLETED, BookingStatus.CHECKED_IN, BookingStatus.RESERVED),
             start = start,
             end = end,
-            limit = limit
+            limit = roomLimit
         )
 
         AdminDashboardResponse(
