@@ -1,6 +1,8 @@
 package edu.mci.repository
 
+import edu.mci.model.api.response.RoomUsageCount
 import edu.mci.model.db.*
+import edu.mci.model.db.toResponse
 import kotlinx.datetime.*
 import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -49,6 +51,12 @@ interface BookingRepository {
         start: LocalDateTime,
         end: LocalDateTime
     ): Map<LocalDate, Int>
+    fun getMostUsedRoomsByOccupiedTime(
+        statuses: List<BookingStatus>,
+        start: LocalDateTime,
+        end: LocalDateTime,
+        limit: Int
+    ): List<RoomUsageCount>
 }
 
 class BookingRepositoryImpl : BookingRepository {
@@ -191,5 +199,40 @@ class BookingRepositoryImpl : BookingRepository {
         return Booking.find {
             (Bookings.start greaterEq start) and (Bookings.start lessEq end)
         }.groupingBy { it.start.date }.eachCount()
+    }
+
+    override fun getMostUsedRoomsByOccupiedTime(
+        statuses: List<BookingStatus>,
+        start: LocalDateTime,
+        end: LocalDateTime,
+        limit: Int
+    ): List<RoomUsageCount> {
+        if (statuses.isEmpty()) {
+            return emptyList()
+        }
+        val bookings = Booking.find {
+            (Bookings.status inList statuses) and
+                (Bookings.start greaterEq start) and
+                (Bookings.start lessEq end) and
+                Bookings.room.isNotNull()
+        }.with(Booking::room).toList()
+
+        val minutesByRoom = bookings.mapNotNull { booking ->
+            val room = booking.room ?: return@mapNotNull null
+            val durationMinutes =
+                (booking.end.toInstant(TimeZone.UTC) - booking.start.toInstant(TimeZone.UTC)).inWholeMinutes
+            room to durationMinutes
+        }.groupBy({ it.first }, { it.second })
+            .mapValues { (_, values) -> values.sum() }
+
+        return minutesByRoom.entries
+            .sortedByDescending { it.value }
+            .take(limit)
+            .map { (room, minutes) ->
+                RoomUsageCount(
+                    room = room.toResponse(),
+                    occupiedMinutes = minutes
+                )
+            }
     }
 }

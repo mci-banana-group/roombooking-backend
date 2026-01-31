@@ -11,11 +11,18 @@ data class AdminDashboardResponse(
     val checkedInBookings: Map<String, Int>,
     val noShowMeetings: Map<String, Int>,
     val reservedMeetings: Map<String, Int>,
-    val mostSearchedItems: List<SearchedItemCount>
+    val mostSearchedItems: List<SearchedItemCount>,
+    val mostUsedRooms: List<RoomUsageCount>
 )
 
 @Serializable
 data class SearchedItemCount(
     val term: String,
     val count: Long
+)
+
+@Serializable
+data class RoomUsageCount(
+    val room: RoomResponse,
+    val occupiedMinutes: Long
 )
