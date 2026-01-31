@@ -4,10 +4,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AdminDashboardResponse(
-    val totalMeetings: Int,
-    val cancelledMeetings: Int,
-    val noShowMeetings: Int,
-    val reservedMeetings: Int,
+    val totalMeetings: Map<String, Int>,
+    val userCancelledMeetings: Map<String, Int>,
+    val adminCancelledMeetings: Map<String, Int>,
+    val completedBookings: Map<String, Int>,
+    val checkedInBookings: Map<String, Int>,
+    val noShowMeetings: Map<String, Int>,
+    val reservedMeetings: Map<String, Int>,
     val mostSearchedItems: List<SearchedItemCount>
 )
 

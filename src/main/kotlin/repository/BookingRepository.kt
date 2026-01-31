@@ -4,7 +4,6 @@ import edu.mci.model.db.*
 import kotlinx.datetime.*
 import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.update
@@ -41,7 +40,15 @@ interface BookingRepository {
     fun countActiveForUserDeletion(userId: Int, now: LocalDateTime): Int
     fun clearRoomReferences(roomId: Int)
     fun clearUserReferences(userId: Int)
-    fun countByStatusAndDateRange(status: BookingStatus, start: LocalDateTime, end: LocalDateTime): Int
+    fun countByStatusAndDateRangeByDay(
+        status: BookingStatus,
+        start: LocalDateTime,
+        end: LocalDateTime
+    ): Map<LocalDate, Int>
+    fun countAllByDateRangeByDay(
+        start: LocalDateTime,
+        end: LocalDateTime
+    ): Map<LocalDate, Int>
 }
 
 class BookingRepositoryImpl : BookingRepository {
@@ -167,13 +174,22 @@ class BookingRepositoryImpl : BookingRepository {
     private fun activeForUserDeletionPredicate(now: LocalDateTime) =
         (Bookings.status eq BookingStatus.RESERVED) or (Bookings.status eq BookingStatus.CHECKED_IN)
 
-    override fun countByStatusAndDateRange(
+    override fun countByStatusAndDateRangeByDay(
         status: BookingStatus,
         start: LocalDateTime,
         end: LocalDateTime
-    ): Int {
+    ): Map<LocalDate, Int> {
         return Booking.find {
             (Bookings.status eq status) and (Bookings.start greaterEq start) and (Bookings.start lessEq end)
-        }.count().toInt()
+        }.groupingBy { it.start.date }.eachCount()
+    }
+
+    override fun countAllByDateRangeByDay(
+        start: LocalDateTime,
+        end: LocalDateTime
+    ): Map<LocalDate, Int> {
+        return Booking.find {
+            (Bookings.start greaterEq start) and (Bookings.start lessEq end)
+        }.groupingBy { it.start.date }.eachCount()
     }
 }

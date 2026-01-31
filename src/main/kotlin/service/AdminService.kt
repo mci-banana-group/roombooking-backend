@@ -12,15 +12,49 @@ class AdminService(
     private val searchedItemRepository: SearchedItemRepository
 ) {
     fun getDashboardStats(start: LocalDateTime, end: LocalDateTime, limit: Int): AdminDashboardResponse = transaction {
-        val totalMeetings = bookingRepository.countByStatusAndDateRange(BookingStatus.CHECKED_IN, start, end)
-        val cancelledMeetings = bookingRepository.countByStatusAndDateRange(BookingStatus.CANCELLED, start, end)
-        val noShowMeetings = bookingRepository.countByStatusAndDateRange(BookingStatus.NO_SHOW, start, end)
-        val reservedMeetings = bookingRepository.countByStatusAndDateRange(BookingStatus.RESERVED, start, end)
+        val totalMeetings =
+            bookingRepository.countAllByDateRangeByDay(start, end).mapKeys {
+                it.toString()
+            }
+
+        val userCancelledMeetings =
+            bookingRepository.countByStatusAndDateRangeByDay(BookingStatus.CANCELLED, start, end).mapKeys {
+                it.toString()
+            }
+
+        val adminCancelledMeetings =
+            bookingRepository.countByStatusAndDateRangeByDay(BookingStatus.ADMIN_CANCELLED, start, end).mapKeys {
+                it.toString()
+            }
+
+        val completedBookings =
+            bookingRepository.countByStatusAndDateRangeByDay(BookingStatus.COMPLETED, start, end).mapKeys {
+                it.toString()
+            }
+
+        val checkedInBookings =
+            bookingRepository.countByStatusAndDateRangeByDay(BookingStatus.CHECKED_IN, start, end).mapKeys {
+                it.toString()
+            }
+
+        val noShowMeetings =
+            bookingRepository.countByStatusAndDateRangeByDay(BookingStatus.NO_SHOW, start, end).mapKeys {
+                it.toString()
+            }
+
+        val reservedMeetings =
+            bookingRepository.countByStatusAndDateRangeByDay(BookingStatus.RESERVED, start, end).mapKeys {
+                it.toString()
+            }
+
         val mostSearchedItems = searchedItemRepository.getMostSearchedItems(start, end, limit = limit)
 
         AdminDashboardResponse(
             totalMeetings = totalMeetings,
-            cancelledMeetings = cancelledMeetings,
+            userCancelledMeetings = userCancelledMeetings,
+            adminCancelledMeetings = adminCancelledMeetings,
+            completedBookings = completedBookings,
+            checkedInBookings = checkedInBookings,
             noShowMeetings = noShowMeetings,
             reservedMeetings = reservedMeetings,
             mostSearchedItems = mostSearchedItems
