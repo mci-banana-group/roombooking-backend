@@ -468,7 +468,7 @@ fun Route.adminRoutes(
          * @query from [String] Optional start date-time (ISO 8601). Defaults to now.
          * @query to [String] Optional end date-time (ISO 8601).
          * @query limit [Int] Optional max number of bookings.
-         * @response 200 application/json [List<BookingResponse>] List of bookings.
+         * @response 200 application/json [BookingResponse] List of bookings.
          * @response 400 text/plain Invalid request data
          * @response 401 text/plain Unauthorized
          * @response 403 text/plain Forbidden (not an admin)
