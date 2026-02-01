@@ -6,13 +6,16 @@ import io.ktor.server.application.*
 import kotlinx.datetime.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-
 fun Application.seedData() {
     val passwordService = BCryptPasswordService()
     transaction {
         if (User.count() > 0) return@transaction // Already seeded
         val timeZone = TimeZone.currentSystemDefault()
         val nowInstant = Clock.System.now()
+
+        // Global counter for room numbers
+        var nextRoomNumber = 1
+
         fun t(days: Int = 0, hours: Int = 0): LocalDateTime {
             val period = DateTimePeriod(days = days, hours = hours)
             return nowInstant.plus(period, timeZone).toLocalDateTime(timeZone)
@@ -109,50 +112,51 @@ fun Application.seedData() {
             role = Role.STUDENT
         }
 
-        // Buildings
-        val mainBuilding = Building.new {
-            name = "Main Building"
-            address = "Universitatsstrasse 15, 6020 Innsbruck"
+        // --- Realistic Buildings (MCI I - V) ---
+        val mci1 = Building.new {
+            name = "MCI I"
+            address = "Universitätsstraße 15, 6020 Innsbruck"
         }
 
-        val techCenter = Building.new {
-            name = "Tech Center"
-            address = "Technikerstrasse 12, 6020 Innsbruck"
+        val mci2 = Building.new {
+            name = "MCI II"
+            address = "Universitätsstraße 7, 6020 Innsbruck"
         }
 
-        val libraryAnnex = Building.new {
-            name = "Library Annex"
-            address = "Fritz-Prior-Strasse 1, 6020 Innsbruck"
+        val mci3 = Building.new {
+            name = "MCI III"
+            address = "Weiherburggasse 8, 6020 Innsbruck"
         }
 
-        val innovationHub = Building.new {
-            name = "Innovation Hub"
-            address = "Maria-Theresien-Strasse 25, 6020 Innsbruck"
+        val mci4 = Building.new {
+            name = "MCI IV"
+            address = "Maximilianstraße 2, 6020 Innsbruck"
         }
 
-        val sportsHall = Building.new {
-            name = "Sports Hall"
-            address = "Innrain 52, 6020 Innsbruck"
+        val mci5 = Building.new {
+            name = "MCI V"
+            address = "Kapuzinergasse 9, 6020 Innsbruck"
         }
 
-        // Rooms
+        // Room Helper
         fun createRoom(
-            number: Int,
-            name: String,
-            description: String,
-            status: RoomStatus,
-            code: String,
+            name: String, // This is the short code from the colum RAUM (e.g. "4B-001")
             capacity: Int,
-            building: Building
-        ): Room = Room.new {
-            roomNumber = number
-            this.name = name
-            this.description = description
-            this.status = status
-            confirmationCode = "1234"
-            this.capacity = capacity
-            this.building = building
+            building: Building,
+            seating: String = "Schule mit Mittelgang", // in the xlsx defined as the Standard.
+            status: RoomStatus = RoomStatus.FREE
+        ): Room {
+            return Room.new {
+                roomNumber = nextRoomNumber++
+                this.name = name
+                this.description = seating
+                this.status = status
+                confirmationCode = "1234"
+                this.capacity = capacity
+                this.building = building
+            }
         }
+
 
         fun addEquipment(room: Room, type: EquipmentType, quantity: Int) {
             RoomEquipmentItem.new {
@@ -162,306 +166,95 @@ fun Application.seedData() {
             }
         }
 
-        val room101 = createRoom(
-            number = 101,
-            name = "Seminar Room A",
-            description = "A small seminar room",
-            status = RoomStatus.FREE,
-            code = "MB-101",
-            capacity = 20,
-            building = mainBuilding
-        )
+        // --- Realistic Rooms (Based on Standardbestuhlung 2025.xlsx) ---
 
-        val room102 = createRoom(
-            number = 102,
-            name = "Seminar Room B",
-            description = "Seminar room with flexible seating",
-            status = RoomStatus.RESERVED,
-            code = "MB-102",
-            capacity = 24,
-            building = mainBuilding
-        )
+        // MCI I
+        val mci1_234 = createRoom("234", 26, mci1)
+        val mci1_301 = createRoom("301", 66, mci1)
+        val mci1_302 = createRoom("302", 66, mci1)
+        val mci1_303 = createRoom("303", 54, mci1)
+        val mci1_304 = createRoom("304", 54, mci1)
+        val mci1_305 = createRoom("305", 60, mci1)
+        val mci1_306 = createRoom("306", 56, mci1)
+        val mci1_307 = createRoom("307", 32, mci1)
+        val mci1_308 = createRoom("308", 18, mci1, "Konferenzraum")
+        val mci1_309 = createRoom("309", 45, mci1)
+        val mci1_310 = createRoom("310", 32, mci1)
+        val mci1_401_402 = createRoom("401/402", 20, mci1, "U-Bestuhlung")
+        val mci1_403 = createRoom("403", 28, mci1, "Parlament")
+        val mci1_404 = createRoom("404", 28, mci1, "Parlament")
+        val mci1_405 = createRoom("405", 28, mci1, "Parlament")
+        val mci1_406 = createRoom("406", 32, mci1, "Parlament")
 
-        val room103 = createRoom(
-            number = 103,
-            name = "Lecture Hall 1",
-            description = "Tiered seating with media control desk",
-            status = RoomStatus.FREE,
-            code = "MB-103",
-            capacity = 80,
-            building = mainBuilding
-        )
+        // MCI II
+        val mci2_051 = createRoom("051", 61, mci2)
+        val mci2_052 = createRoom("052", 69, mci2)
+        val mci2_053 = createRoom("053", 78, mci2)
+        val mci2_162 = createRoom("162", 8, mci2, "WOW-Raum")
+        val mci2_163 = createRoom("163", 8, mci2, "WOW-Raum")
+        val mci2_164 = createRoom("164", 12, mci2, "Besprechungsraum")
+        val mci2_551 = createRoom("551", 40, mci2)
+        val mci2_552 = createRoom("552", 50, mci2)
 
-        val room201 = createRoom(
-            number = 201,
-            name = "Project Studio",
-            description = "Open room for group work",
-            status = RoomStatus.OCCUPIED,
-            code = "MB-201",
-            capacity = 30,
-            building = mainBuilding
-        )
+        // MCI III
+        val mci3_011 = createRoom("011", 54, mci3)
+        val mci3_012 = createRoom("012", 54, mci3)
+        val mci3_013 = createRoom("013", 54, mci3)
+        val mci3_014 = createRoom("014", 30, mci3)
+        val mci3_111 = createRoom("111", 54, mci3)
+        val mci3_112 = createRoom("112", 60, mci3)
+        val mci3_113 = createRoom("113", 30, mci3)
 
-        val room202 = createRoom(
-            number = 202,
-            name = "Conference Room",
-            description = "Large conference room with video wall",
-            status = RoomStatus.FREE,
-            code = "MB-202",
-            capacity = 18,
-            building = mainBuilding
-        )
+        // MCI IV
+        val mci4_4B001 = createRoom("4B-001", 29, mci4)
+        val mci4_4B003 = createRoom("4B-003", 30, mci4)
+        val mci4_4B005 = createRoom("4B-005", 23, mci4)
+        val mci4_4B006 = createRoom("4B-006", 33, mci4)
+        val mci4_4B007 = createRoom("4B-007", 30, mci4)
+        val mci4_4B008 = createRoom("4B-008", 16, mci4, "Besprechungsraum")
+        val mci4_4A020 = createRoom("4A-020", 58, mci4)
+        val mci4_4A024 = createRoom("4A-024", 68, mci4)
+        val mci4_4A027 = createRoom("4A-027", 60, mci4)
+        val mci4_1A135 = createRoom("1A-135", 45, mci4, "e-exam-Raum/SR")
+        val mci4_4B115 = createRoom("4B-115", 22, mci4, "EDV-Raum")
+        val mci4_4A393 = createRoom("4A-393", 48, mci4)
+        val mci4_4A438 = createRoom("4A-438", 36, mci4)
+        val mci4_4A439 = createRoom("4A-439", 68, mci4)
+        val mci4_4C501 = createRoom("4C-501", 12, mci4)
+        val mci4_4C502 = createRoom("4C-502", 25, mci4, "EDV-Raum")
+        val mci4_4C503 = createRoom("4C-503", 25, mci4, "EDV-Raum")
+        val mci4_4C504 = createRoom("4C-504", 27, mci4, "EDV-Raum")
+        val mci4_4C505 = createRoom("4C-505", 45, mci4, "EDV-Raum")
 
-        val room203 = createRoom(
-            number = 203,
-            name = "Thesis Room",
-            description = "Quiet room for thesis defenses",
-            status = RoomStatus.RESERVED,
-            code = "MB-203",
-            capacity = 12,
-            building = mainBuilding
-        )
+        // MCI V
+        val mci5_181 = createRoom("181", 40, mci5)
+        val mci5_182 = createRoom("182", 40, mci5)
+        val mci5_183 = createRoom("183", 40, mci5)
+        val mci5_184 = createRoom("184", 44, mci5)
+        val mci5_185 = createRoom("185", 52, mci5)
+        val mci5_283 = createRoom("283", 40, mci5)
 
-        val room204 = createRoom(
-            number = 204,
-            name = "Workshop Studio",
-            description = "Hands-on studio with movable tables",
-            status = RoomStatus.FREE,
-            code = "MB-204",
-            capacity = 26,
-            building = mainBuilding
-        )
 
-        val tech110 = createRoom(
-            number = 110,
-            name = "Computer Lab 1",
-            description = "PC lab with dual displays",
-            status = RoomStatus.FREE,
-            code = "TC-110",
-            capacity = 28,
-            building = techCenter
-        )
+        // Equipment Seeding (Assigned to realistic rooms)
+        // Standard Setup for Seminar Rooms: Beamer + Whiteboards
+        listOf(mci1_301, mci1_302, mci4_4A020, mci4_4A024).forEach {
+            addEquipment(it, EquipmentType.BEAMER, 1)
+            addEquipment(it, EquipmentType.WHITEBOARD, 2)
+            addEquipment(it, EquipmentType.HDMI_CABLE, 1)
+        }
 
-        val tech120 = createRoom(
-            number = 120,
-            name = "Robotics Lab",
-            description = "Lab with workbenches and sensors",
-            status = RoomStatus.OCCUPIED,
-            code = "TC-120",
-            capacity = 16,
-            building = techCenter
-        )
+        // Setup for EDV/Computer Rooms: Displays
+        listOf(mci4_4B115, mci4_4C502, mci4_4C503).forEach {
+            addEquipment(it, EquipmentType.DISPLAY, it.capacity) // One per student-seat approx
+            addEquipment(it, EquipmentType.WHITEBOARD, 1)
+        }
 
-        val tech210 = createRoom(
-            number = 210,
-            name = "Innovation Classroom",
-            description = "Modular furniture and wall whiteboards",
-            status = RoomStatus.FREE,
-            code = "TC-210",
-            capacity = 32,
-            building = techCenter
-        )
+        // Setup for Meeting/Small Rooms
+        listOf(mci1_308, mci2_164, mci4_4B008).forEach {
+            addEquipment(it, EquipmentType.DISPLAY, 1)
+            addEquipment(it, EquipmentType.HDMI_CABLE, 1)
+        }
 
-        val tech220 = createRoom(
-            number = 220,
-            name = "Makerspace",
-            description = "3D printers and prototyping tools",
-            status = RoomStatus.RESERVED,
-            code = "TC-220",
-            capacity = 14,
-            building = techCenter
-        )
-
-        val tech230 = createRoom(
-            number = 230,
-            name = "Network Lab",
-            description = "Lab with switches and routers",
-            status = RoomStatus.FREE,
-            code = "TC-230",
-            capacity = 18,
-            building = techCenter
-        )
-
-        val tech240 = createRoom(
-            number = 240,
-            name = "AR/VR Studio",
-            description = "Immersive lab with VR headsets",
-            status = RoomStatus.RESERVED,
-            code = "TC-240",
-            capacity = 12,
-            building = techCenter
-        )
-
-        val lib10 = createRoom(
-            number = 10,
-            name = "Quiet Study 1",
-            description = "Silent study room",
-            status = RoomStatus.FREE,
-            code = "LA-010",
-            capacity = 12,
-            building = libraryAnnex
-        )
-
-        val lib11 = createRoom(
-            number = 11,
-            name = "Quiet Study 2",
-            description = "Silent study room with window wall",
-            status = RoomStatus.FREE,
-            code = "LA-011",
-            capacity = 10,
-            building = libraryAnnex
-        )
-
-        val lib20 = createRoom(
-            number = 20,
-            name = "Group Study 1",
-            description = "Group study with whiteboards",
-            status = RoomStatus.RESERVED,
-            code = "LA-020",
-            capacity = 8,
-            building = libraryAnnex
-        )
-
-        val lib21 = createRoom(
-            number = 21,
-            name = "Group Study 2",
-            description = "Small group room with display",
-            status = RoomStatus.FREE,
-            code = "LA-021",
-            capacity = 8,
-            building = libraryAnnex
-        )
-
-        val lib30 = createRoom(
-            number = 30,
-            name = "Media Study",
-            description = "Room with media editing setup",
-            status = RoomStatus.RESERVED,
-            code = "LA-030",
-            capacity = 6,
-            building = libraryAnnex
-        )
-
-        val hub301 = createRoom(
-            number = 301,
-            name = "Startup Garage",
-            description = "Pitch room with movable panels",
-            status = RoomStatus.FREE,
-            code = "IH-301",
-            capacity = 26,
-            building = innovationHub
-        )
-
-        val hub302 = createRoom(
-            number = 302,
-            name = "Design Lab",
-            description = "Creative lab with sketch walls",
-            status = RoomStatus.FREE,
-            code = "IH-302",
-            capacity = 20,
-            building = innovationHub
-        )
-
-        val hub401 = createRoom(
-            number = 401,
-            name = "Board Room",
-            description = "Executive board room",
-            status = RoomStatus.RESERVED,
-            code = "IH-401",
-            capacity = 14,
-            building = innovationHub
-        )
-
-        val hub402 = createRoom(
-            number = 402,
-            name = "Strategy Room",
-            description = "Planning room with wall displays",
-            status = RoomStatus.FREE,
-            code = "IH-402",
-            capacity = 16,
-            building = innovationHub
-        )
-
-        val hub501 = createRoom(
-            number = 501,
-            name = "Investor Lounge",
-            description = "Private meeting room for investors",
-            status = RoomStatus.RESERVED,
-            code = "IH-501",
-            capacity = 10,
-            building = innovationHub
-        )
-
-        val sports1 = createRoom(
-            number = 1,
-            name = "Gym Hall",
-            description = "Multi-purpose sports hall",
-            status = RoomStatus.OCCUPIED,
-            code = "SH-001",
-            capacity = 60,
-            building = sportsHall
-        )
-
-        val sports2 = createRoom(
-            number = 2,
-            name = "Dance Studio",
-            description = "Studio with mirrors and wooden floor",
-            status = RoomStatus.FREE,
-            code = "SH-002",
-            capacity = 25,
-            building = sportsHall
-        )
-
-        val sports3 = createRoom(
-            number = 3,
-            name = "Yoga Room",
-            description = "Quiet space for yoga and stretching",
-            status = RoomStatus.FREE,
-            code = "SH-003",
-            capacity = 18,
-            building = sportsHall
-        )
-
-        addEquipment(room101, EquipmentType.BEAMER, 1)
-        addEquipment(room101, EquipmentType.WHITEBOARD, 2)
-        addEquipment(room102, EquipmentType.BEAMER, 1)
-        addEquipment(room102, EquipmentType.HDMI_CABLE, 2)
-        addEquipment(room103, EquipmentType.BEAMER, 2)
-        addEquipment(room103, EquipmentType.DISPLAY, 1)
-        addEquipment(room201, EquipmentType.WHITEBOARD, 3)
-        addEquipment(room201, EquipmentType.HDMI_CABLE, 2)
-        addEquipment(room202, EquipmentType.DISPLAY, 2)
-        addEquipment(room202, EquipmentType.BEAMER, 1)
-        addEquipment(room203, EquipmentType.WHITEBOARD, 1)
-        addEquipment(room204, EquipmentType.BEAMER, 1)
-        addEquipment(room204, EquipmentType.WHITEBOARD, 2)
-        addEquipment(tech110, EquipmentType.DISPLAY, 28)
-        addEquipment(tech110, EquipmentType.HDMI_CABLE, 20)
-        addEquipment(tech120, EquipmentType.WHITEBOARD, 2)
-        addEquipment(tech120, EquipmentType.DISPLAY, 4)
-        addEquipment(tech210, EquipmentType.BEAMER, 1)
-        addEquipment(tech210, EquipmentType.WHITEBOARD, 2)
-        addEquipment(tech220, EquipmentType.BEAMER, 1)
-        addEquipment(tech220, EquipmentType.HDMI_CABLE, 4)
-        addEquipment(tech230, EquipmentType.DISPLAY, 6)
-        addEquipment(tech230, EquipmentType.HDMI_CABLE, 6)
-        addEquipment(tech240, EquipmentType.DISPLAY, 4)
-        addEquipment(lib10, EquipmentType.WHITEBOARD, 1)
-        addEquipment(lib11, EquipmentType.WHITEBOARD, 1)
-        addEquipment(lib20, EquipmentType.DISPLAY, 1)
-        addEquipment(lib21, EquipmentType.DISPLAY, 1)
-        addEquipment(lib30, EquipmentType.DISPLAY, 1)
-        addEquipment(hub301, EquipmentType.BEAMER, 1)
-        addEquipment(hub301, EquipmentType.WHITEBOARD, 2)
-        addEquipment(hub302, EquipmentType.BEAMER, 1)
-        addEquipment(hub302, EquipmentType.DISPLAY, 2)
-        addEquipment(hub401, EquipmentType.DISPLAY, 1)
-        addEquipment(hub401, EquipmentType.HDMI_CABLE, 2)
-        addEquipment(hub402, EquipmentType.DISPLAY, 2)
-        addEquipment(hub501, EquipmentType.DISPLAY, 1)
-        addEquipment(sports1, EquipmentType.DISPLAY, 1)
-        addEquipment(sports2, EquipmentType.DISPLAY, 1)
-        addEquipment(sports3, EquipmentType.DISPLAY, 1)
 
         // Bookings
         val booking1 = Booking.new {
@@ -472,7 +265,7 @@ fun Application.seedData() {
             status = BookingStatus.RESERVED
             description = "Lecturer Meeting"
             user = lecturer1
-            room = room101
+            room = mci1_301
         }
 
         val booking2 = Booking.new {
@@ -483,7 +276,7 @@ fun Application.seedData() {
             status = BookingStatus.CHECKED_IN
             description = "Project Sync"
             user = lecturer2
-            room = room201
+            room = mci2_164
         }
 
         val booking3 = Booking.new {
@@ -494,7 +287,7 @@ fun Application.seedData() {
             status = BookingStatus.RESERVED
             description = "Data Science Lab"
             user = lecturer3
-            room = tech110
+            room = mci4_4B115
         }
 
         val booking4 = Booking.new {
@@ -505,7 +298,7 @@ fun Application.seedData() {
             status = BookingStatus.RESERVED
             description = "Robotics Demo"
             user = staff1
-            room = tech120
+            room = mci4_4C502
         }
 
         val booking5 = Booking.new {
@@ -516,7 +309,7 @@ fun Application.seedData() {
             status = BookingStatus.NO_SHOW
             description = "Study Group"
             user = student1
-            room = lib20
+            room = mci3_014
         }
 
         val booking6 = Booking.new {
@@ -527,7 +320,7 @@ fun Application.seedData() {
             status = BookingStatus.RESERVED
             description = "Startup Pitch Prep"
             user = student2
-            room = hub301
+            room = mci5_181
         }
 
         val booking7 = Booking.new {
@@ -538,7 +331,7 @@ fun Application.seedData() {
             status = BookingStatus.RESERVED
             description = "Board Review"
             user = staff2
-            room = hub401
+            room = mci1_308
         }
 
         val booking8 = Booking.new {
@@ -547,9 +340,9 @@ fun Application.seedData() {
             createdAt = t(hours = -12)
             gracePeriodMin = 10
             status = BookingStatus.CANCELLED
-            description = "Dance Workshop"
+            description = "Student Union Workshop"
             user = student3
-            room = sports2
+            room = mci1_401_402
         }
 
         val booking9 = Booking.new {
@@ -560,7 +353,7 @@ fun Application.seedData() {
             status = BookingStatus.RESERVED
             description = "Guest Lecture"
             user = lecturer1
-            room = room103
+            room = mci4_4A020
         }
 
         val booking10 = Booking.new {
@@ -571,7 +364,7 @@ fun Application.seedData() {
             status = BookingStatus.CHECKED_IN
             description = "Marketing Workshop"
             user = student4
-            room = room202
+            room = mci5_185
         }
 
         PresenceConfirmation.new {
@@ -588,7 +381,7 @@ fun Application.seedData() {
 
         Notification.new {
             sentAt = t(hours = -1)
-            message = "Reminder: Lecturer Meeting in Seminar Room A"
+            message = "Reminder: Lecturer Meeting in Seminarraum 301"
             channel = NotificationChannel.EMAIL
             user = lecturer1
             booking = booking1
@@ -611,5 +404,5 @@ fun Application.seedData() {
         }
     }
 
-    environment.log.info("Database seeded with dummy data.")
+    environment.log.info("Database seeded with realistic MCI data.")
 }

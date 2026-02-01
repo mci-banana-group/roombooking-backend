@@ -11,19 +11,65 @@ class AdminService(
     private val bookingRepository: BookingRepository,
     private val searchedItemRepository: SearchedItemRepository
 ) {
-    fun getDashboardStats(start: LocalDateTime, end: LocalDateTime, limit: Int): AdminDashboardResponse = transaction {
-        val totalMeetings = bookingRepository.countByStatusAndDateRange(BookingStatus.CHECKED_IN, start, end)
-        val cancelledMeetings = bookingRepository.countByStatusAndDateRange(BookingStatus.CANCELLED, start, end)
-        val noShowMeetings = bookingRepository.countByStatusAndDateRange(BookingStatus.NO_SHOW, start, end)
-        val reservedMeetings = bookingRepository.countByStatusAndDateRange(BookingStatus.RESERVED, start, end)
-        val mostSearchedItems = searchedItemRepository.getMostSearchedItems(start, end, limit = limit)
+    fun getDashboardStats(
+        start: LocalDateTime,
+        end: LocalDateTime,
+        equipmentLimit: Int,
+        roomLimit: Int
+    ): AdminDashboardResponse = transaction {
+        val totalMeetings =
+            bookingRepository.countAllByDateRangeByDay(start, end).mapKeys { (date, _) ->
+                date.toString()
+            }
+
+        val userCancelledMeetings =
+            bookingRepository.countByStatusAndDateRangeByDay(BookingStatus.CANCELLED, start, end).mapKeys { (date, _) ->
+                date.toString()
+            }
+
+        val adminCancelledMeetings =
+            bookingRepository.countByStatusAndDateRangeByDay(BookingStatus.ADMIN_CANCELLED, start, end).mapKeys { (date, _) ->
+                date.toString()
+            }
+
+        val completedBookings =
+            bookingRepository.countByStatusAndDateRangeByDay(BookingStatus.COMPLETED, start, end).mapKeys { (date, _) ->
+                date.toString()
+            }
+
+        val checkedInBookings =
+            bookingRepository.countByStatusAndDateRangeByDay(BookingStatus.CHECKED_IN, start, end).mapKeys { (date, _) ->
+                date.toString()
+            }
+
+        val noShowMeetings =
+            bookingRepository.countByStatusAndDateRangeByDay(BookingStatus.NO_SHOW, start, end).mapKeys { (date, _) ->
+                date.toString()
+            }
+
+        val reservedMeetings =
+            bookingRepository.countByStatusAndDateRangeByDay(BookingStatus.RESERVED, start, end).mapKeys { (date, _) ->
+                date.toString()
+            }
+
+        val mostSearchedItems = searchedItemRepository.getMostSearchedItems(start, end, limit = equipmentLimit)
+        val mostUsedRooms = bookingRepository.getMostUsedRoomsByOccupiedTime(
+            statuses = listOf(BookingStatus.COMPLETED, BookingStatus.CHECKED_IN, BookingStatus.RESERVED),
+            start = start,
+            end = end,
+            limit = roomLimit
+        )
 
         AdminDashboardResponse(
             totalMeetings = totalMeetings,
-            cancelledMeetings = cancelledMeetings,
+            userCancelledMeetings = userCancelledMeetings,
+            adminCancelledMeetings = adminCancelledMeetings,
+            completedBookings = completedBookings,
+            checkedInBookings = checkedInBookings,
             noShowMeetings = noShowMeetings,
             reservedMeetings = reservedMeetings,
-            mostSearchedItems = mostSearchedItems
+            mostSearchedItems = mostSearchedItems,
+            mostUsedRooms = mostUsedRooms
         )
     }
 }

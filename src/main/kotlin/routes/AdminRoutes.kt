@@ -45,40 +45,52 @@ fun Route.adminRoutes(
              * @tag Admin
              * @query start [String] Start date-time (ISO 8601). Format: 2026-01-01T00:00:00
              * @query end [String] End date-time (ISO 8601). Format: 2026-01-31T23:59:59
-             * @query limit [Int] Max number of most searched items to return (default 10, max 100).
+             * @query equipmentLimit [Int] Max number of most searched items to return (default 10, max 100).
+             * @query roomLimit [Int] Max number of most used rooms to return (default 10, max 100).
              * @response 200 application/json [AdminDashboardResponse] Statistics for the dashboard.
              * @response 401 text/plain Unauthorized
              * @response 403 text/plain Forbidden (not an admin)
-             * @response 400 text/plain Invalid date format or limit
+             * @response 400 text/plain Invalid date format or limits
              */
             get("/stats") {
-            val queryParams = call.request.queryParameters
-            val startStr = queryParams["start"]
-            val endStr = queryParams["end"]
-            val limitStr = queryParams["limit"]
+                val queryParams = call.request.queryParameters
+                val startStr = queryParams["start"]
+                val endStr = queryParams["end"]
+                val equipmentLimitStr = queryParams["equipmentLimit"]
+                val roomLimitStr = queryParams["roomLimit"]
 
-            if (startStr == null || endStr == null) {
-                call.respond(HttpStatusCode.BadRequest, "Start and end date-time are required")
-                return@get
-            }
+                if (startStr == null || endStr == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Start and end date-time are required")
+                    return@get
+                }
 
-            val start = runCatching { LocalDateTime.parse(startStr) }.getOrNull()
-            val end = runCatching { LocalDateTime.parse(endStr) }.getOrNull()
+                val start = runCatching { LocalDateTime.parse(startStr) }.getOrNull()
+                val end = runCatching { LocalDateTime.parse(endStr) }.getOrNull()
 
-            if (start == null || end == null) {
-                call.respond(HttpStatusCode.BadRequest, "Invalid date-time format. Use ISO 8601 (e.g., 2026-01-01T00:00:00)")
-                return@get
-            }
+                if (start == null || end == null) {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Invalid date-time format. Use ISO 8601 (e.g., 2026-01-01T00:00:00)"
+                    )
+                    return@get
+                }
 
-            val limit = limitStr?.toIntOrNull() ?: 10
-            if (limit <= 0) {
-                call.respond(HttpStatusCode.BadRequest, "Limit must be a positive integer")
-                return@get
-            }
-            val finalLimit = limit.coerceAtMost(100)
+                val equipmentLimit = equipmentLimitStr?.toIntOrNull() ?: 10
+                if (equipmentLimit <= 0) {
+                    call.respond(HttpStatusCode.BadRequest, "equipmentLimit must be a positive integer")
+                    return@get
+                }
+                val finalEquipmentLimit = equipmentLimit.coerceAtMost(100)
 
-            val stats = adminService.getDashboardStats(start, end, finalLimit)
-            call.respond(stats)
+                val roomLimit = roomLimitStr?.toIntOrNull() ?: 10
+                if (roomLimit <= 0) {
+                    call.respond(HttpStatusCode.BadRequest, "roomLimit must be a positive integer")
+                    return@get
+                }
+                val finalRoomLimit = roomLimit.coerceAtMost(100)
+
+                val stats = adminService.getDashboardStats(start, end, finalEquipmentLimit, finalRoomLimit)
+                call.respond(stats)
         }
 
         /**
