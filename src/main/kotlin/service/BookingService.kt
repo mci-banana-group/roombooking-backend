@@ -23,6 +23,10 @@ class BookingService(
         bookingRepository.findByUserId(userId).map { it.toResponse() }
     }
 
+    fun getBookingsForRoom(roomId: Int, start: Instant, end: Instant?, limit: Int?): List<BookingResponse> = transaction {
+        bookingRepository.findBookingsByRoomId(roomId, start, end, limit).map { it.toResponse() }
+    }
+
     fun createBooking(userId: Int, createDto: CreateBookingRequest): BookingResponse = transaction {
         if (createDto.start >= createDto.end) {
             throw IllegalArgumentException("Start time must be before end time")

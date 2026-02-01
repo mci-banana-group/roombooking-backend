@@ -8,11 +8,13 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.SortOrder
 
 interface BookingRepository {
     fun findById(id: Int): Booking?
     fun findByUserId(userId: Int): List<Booking>
     fun findByRoomIdsAndDate(roomIds: List<Int>, date: LocalDate): List<Booking>
+    fun findBookingsByRoomId(roomId: Int, start: Instant, end: Instant?, limit: Int?): List<Booking>
     fun findOverlappingBookings(roomId: Int, start: Instant, end: Instant): List<Booking>
     fun findExpiredReservations(dateTime: LocalDateTime): List<Booking>
     fun findBookingsCheckInWindow(dateTime: LocalDateTime): List<Booking>
@@ -59,6 +61,26 @@ class BookingRepositoryImpl : BookingRepository {
         return Booking.find {
             (Bookings.room inList roomIds) and (Bookings.start greaterEq startOfDay) and (Bookings.start lessEq endOfDay)
         }.with(Booking::user).toList()
+    }
+
+    override fun findBookingsByRoomId(roomId: Int, start: Instant, end: Instant?, limit: Int?): List<Booking> {
+        val startRange = start.toLocalDateTime(TimeZone.UTC)
+        val endRange = end?.toLocalDateTime(TimeZone.UTC)
+
+        return Booking.find {
+            val base = (Bookings.room eq roomId) and (Bookings.end greaterEq startRange)
+            if (endRange != null) {
+                base and (Bookings.start lessEq endRange)
+            } else {
+                base
+            }
+        }
+            .orderBy(Bookings.start to SortOrder.ASC)
+            .let { query ->
+                if (limit != null) query.limit(limit) else query
+            }
+            .with(Booking::user)
+            .toList()
     }
 
     override fun findOverlappingBookings(roomId: Int, start: Instant, end: Instant): List<Booking> {
