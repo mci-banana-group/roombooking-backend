@@ -29,6 +29,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 fun Route.adminRoutes(
     adminService: AdminService,
@@ -456,6 +458,55 @@ fun Route.adminRoutes(
             )
 
             call.respond(rooms)
+        }
+
+        /**
+         * Get bookings for a specific room. Only accessible by admins.
+         *
+         * @tag Admin
+         * @path roomId [Int] The ID of the room.
+         * @query from [String] Optional start date-time (ISO 8601). Defaults to now.
+         * @query to [String] Optional end date-time (ISO 8601).
+         * @query limit [Int] Optional max number of bookings.
+         * @response 200 application/json [List<BookingResponse>] List of bookings.
+         * @response 400 text/plain Invalid request data
+         * @response 401 text/plain Unauthorized
+         * @response 403 text/plain Forbidden (not an admin)
+         */
+        get("/rooms/{roomId}/bookings") {
+            val roomId = call.parameters["roomId"]?.toIntOrNull()
+            if (roomId == null) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid Room ID")
+                return@get
+            }
+
+            val queryParams = call.request.queryParameters
+            val fromStr = queryParams["from"]
+            val toStr = queryParams["to"]
+            val limitStr = queryParams["limit"]
+
+            val from = if (fromStr != null) {
+                runCatching { Instant.parse(fromStr) }.getOrElse {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid 'from' date format. Use ISO 8601")
+                    return@get
+                }
+            } else {
+                Clock.System.now()
+            }
+
+            val to = if (toStr != null) {
+                runCatching { Instant.parse(toStr) }.getOrElse {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid 'to' date format. Use ISO 8601")
+                    return@get
+                }
+            } else {
+                null
+            }
+
+            val limit = limitStr?.toIntOrNull()
+
+            val bookings = bookingService.getBookingsForRoom(roomId, from, to, limit)
+            call.respond(bookings)
         }
 
         /**
