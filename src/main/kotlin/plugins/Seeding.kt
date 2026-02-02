@@ -255,6 +255,96 @@ fun Application.seedData() {
             addEquipment(it, EquipmentType.HDMI_CABLE, 1)
         }
 
+        val allRooms = listOf(
+            mci1_234, mci1_301, mci1_302, mci1_303, mci1_304, mci1_305, mci1_306, mci1_307, mci1_308,
+            mci1_309, mci1_310, mci1_401_402, mci1_403, mci1_404, mci1_405, mci1_406,
+            mci2_051, mci2_052, mci2_053, mci2_162, mci2_163, mci2_164, mci2_551, mci2_552,
+            mci3_011, mci3_012, mci3_013, mci3_014, mci3_111, mci3_112, mci3_113,
+            mci4_4B001, mci4_4B003, mci4_4B005, mci4_4B006, mci4_4B007, mci4_4B008,
+            mci4_4A020, mci4_4A024, mci4_4A027, mci4_1A135, mci4_4B115, mci4_4A393, mci4_4A438,
+            mci4_4A439, mci4_4C501, mci4_4C502, mci4_4C503, mci4_4C504, mci4_4C505,
+            mci5_181, mci5_182, mci5_183, mci5_184, mci5_185, mci5_283
+        )
+
+        val allUsers = listOf(admin, staff1, staff2, lecturer1, lecturer2, lecturer3, student1, student2, student3, student4)
+
+        val today = nowInstant.toLocalDateTime(timeZone).date
+        val pastDates = (3..90 step 6).map { offset -> today.minus(DatePeriod(days = offset)) }
+        val futureDates = (1..30 step 5).map { offset -> today.plus(DatePeriod(days = offset)) }
+        val demoDate = LocalDate(2026, 2, 5)
+        val demoRooms = setOf(mci1_308, mci2_164, mci4_4B008, mci4_4C501)
+        val futureDatesBase = futureDates.filter { it != demoDate }.ifEmpty { futureDates }
+        val januaryDates = (1..31).map { day -> LocalDate(2026, 1, day) }
+        val nearPastDates = (1..7).map { offset -> today.minus(DatePeriod(days = offset)) }
+        val nearFutureDates = (0..14).map { offset -> today.plus(DatePeriod(days = offset)) }.filter { it != demoDate }
+
+        val pastStatuses = listOf(
+            BookingStatus.COMPLETED,
+            BookingStatus.COMPLETED,
+            BookingStatus.NO_SHOW,
+            BookingStatus.CANCELLED,
+            BookingStatus.ADMIN_CANCELLED
+        )
+        val currentStatuses = listOf(
+            BookingStatus.RESERVED,
+            BookingStatus.CHECKED_IN,
+            BookingStatus.RESERVED
+        )
+        val futureStatuses = listOf(
+            BookingStatus.RESERVED,
+            BookingStatus.RESERVED,
+            BookingStatus.RESERVED,
+            BookingStatus.CANCELLED,
+            BookingStatus.ADMIN_CANCELLED
+        )
+
+        fun slotStart(date: LocalDate, slot: Int): LocalDateTime {
+            val hour = 8 + ((slot % 5) * 2)
+            return LocalDateTime(date.year, date.monthNumber, date.dayOfMonth, hour, 0)
+        }
+
+        fun addSeedBooking(
+            date: LocalDate,
+            slot: Int,
+            durationHours: Int,
+            status: BookingStatus,
+            user: User,
+            room: Room,
+            description: String
+        ): Booking {
+            val start = slotStart(date, slot)
+            val end = start.toInstant(timeZone).plus(durationHours, DateTimeUnit.HOUR).toLocalDateTime(timeZone)
+            val createdAt = start.toInstant(timeZone).minus(6, DateTimeUnit.HOUR).toLocalDateTime(timeZone)
+            return Booking.new {
+                this.start = start
+                this.end = end
+                this.createdAt = createdAt
+                gracePeriodMin = 15
+                this.status = status
+                this.description = description
+                this.user = user
+                this.room = room
+            }
+        }
+
+        val descriptions = listOf(
+            "Seminar",
+            "Team Meeting",
+            "Lab Session",
+            "Exam Prep",
+            "Workshop",
+            "Study Group",
+            "Project Review",
+            "Guest Lecture",
+            "Thesis Defense",
+            "Career Session"
+        )
+        var bookingCounter = 0
+        fun nextDescription(): String {
+            val description = descriptions[bookingCounter % descriptions.size]
+            bookingCounter += 1
+            return description
+        }
 
         // Bookings
         val booking1 = Booking.new {
@@ -365,6 +455,131 @@ fun Application.seedData() {
             description = "Marketing Workshop"
             user = student4
             room = mci5_185
+        }
+
+        allRooms.forEachIndexed { index, room ->
+            januaryDates.forEachIndexed { dayIndex, date ->
+                addSeedBooking(
+                    date = date,
+                    slot = index + dayIndex,
+                    durationHours = 2,
+                    status = pastStatuses[(index + dayIndex) % pastStatuses.size],
+                    user = allUsers[(index + dayIndex) % allUsers.size],
+                    room = room,
+                    description = nextDescription()
+                )
+                addSeedBooking(
+                    date = date,
+                    slot = index + dayIndex + 1,
+                    durationHours = 2,
+                    status = pastStatuses[(index + dayIndex + 2) % pastStatuses.size],
+                    user = allUsers[(index + dayIndex + 3) % allUsers.size],
+                    room = room,
+                    description = nextDescription()
+                )
+            }
+
+            nearPastDates.forEachIndexed { dayIndex, date ->
+                addSeedBooking(
+                    date = date,
+                    slot = index + dayIndex,
+                    durationHours = 2,
+                    status = pastStatuses[(index + dayIndex) % pastStatuses.size],
+                    user = allUsers[(index + dayIndex) % allUsers.size],
+                    room = room,
+                    description = nextDescription()
+                )
+                addSeedBooking(
+                    date = date,
+                    slot = index + dayIndex + 2,
+                    durationHours = 2,
+                    status = pastStatuses[(index + dayIndex + 2) % pastStatuses.size],
+                    user = allUsers[(index + dayIndex + 3) % allUsers.size],
+                    room = room,
+                    description = nextDescription()
+                )
+            }
+
+            nearFutureDates.forEachIndexed { dayIndex, date ->
+                addSeedBooking(
+                    date = date,
+                    slot = index + dayIndex + 1,
+                    durationHours = 2,
+                    status = futureStatuses[(index + dayIndex) % futureStatuses.size],
+                    user = allUsers[(index + dayIndex + 1) % allUsers.size],
+                    room = room,
+                    description = nextDescription()
+                )
+                addSeedBooking(
+                    date = date,
+                    slot = index + dayIndex + 3,
+                    durationHours = 2,
+                    status = futureStatuses[(index + dayIndex + 2) % futureStatuses.size],
+                    user = allUsers[(index + dayIndex + 3) % allUsers.size],
+                    room = room,
+                    description = nextDescription()
+                )
+            }
+
+            val pastDate1 = pastDates[(index * 3) % pastDates.size]
+            val pastDate2 = pastDates[(index * 3 + 5) % pastDates.size]
+            val pastDate3 = pastDates[(index * 3 + 11) % pastDates.size]
+
+            listOf(pastDate1, pastDate2, pastDate3).distinct().forEachIndexed { i, date ->
+                addSeedBooking(
+                    date = date,
+                    slot = index + i,
+                    durationHours = 2,
+                    status = pastStatuses[(index + i) % pastStatuses.size],
+                    user = allUsers[(index + i) % allUsers.size],
+                    room = room,
+                    description = nextDescription()
+                )
+            }
+
+            val currentDate = if (index % 2 == 0) today else today.minus(DatePeriod(days = 1))
+            addSeedBooking(
+                date = currentDate,
+                slot = index + 2,
+                durationHours = 2,
+                status = currentStatuses[index % currentStatuses.size],
+                user = allUsers[(index + 2) % allUsers.size],
+                room = room,
+                description = nextDescription()
+            )
+
+            val futureDate1 = futureDatesBase[(index * 2) % futureDatesBase.size]
+            val futureDate2 = futureDatesBase[(index * 2 + 3) % futureDatesBase.size]
+            addSeedBooking(
+                date = futureDate1,
+                slot = index + 1,
+                durationHours = 2,
+                status = futureStatuses[index % futureStatuses.size],
+                user = allUsers[(index + 1) % allUsers.size],
+                room = room,
+                description = nextDescription()
+            )
+            addSeedBooking(
+                date = futureDate2,
+                slot = index + 3,
+                durationHours = 2,
+                status = futureStatuses[(index + 2) % futureStatuses.size],
+                user = allUsers[(index + 3) % allUsers.size],
+                room = room,
+                description = nextDescription()
+            )
+        }
+
+        demoRooms.forEachIndexed { index, room ->
+            addSeedBooking(
+                date = demoDate,
+                slot = index,
+                durationHours = 2,
+                status = BookingStatus.RESERVED,
+                user = allUsers[(index + 1) % allUsers.size],
+                room = room,
+                description = "Live Demo Hold"
+            )
         }
 
         PresenceConfirmation.new {
