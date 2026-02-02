@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.SortOrder
 interface BookingRepository {
     fun findById(id: Int): Booking?
     fun findByUserId(userId: Int): List<Booking>
+    fun findBookingsByUserId(userId: Int, start: Instant?, end: Instant?): List<Booking>
     fun findByRoomIdsAndDate(roomIds: List<Int>, date: LocalDate): List<Booking>
     fun findBookingsByRoomId(roomId: Int, start: Instant, end: Instant?, limit: Int?): List<Booking>
     fun findOverlappingBookings(roomId: Int, start: Instant, end: Instant): List<Booking>
@@ -66,6 +67,25 @@ class BookingRepositoryImpl : BookingRepository {
 
     override fun findByUserId(userId: Int): List<Booking> =
         Booking.find { Bookings.user eq userId }.with(Booking::user).toList()
+
+    override fun findBookingsByUserId(userId: Int, start: Instant?, end: Instant?): List<Booking> {
+        val startDateTime = start?.toLocalDateTime(TimeZone.UTC)
+        val endDateTime = end?.toLocalDateTime(TimeZone.UTC)
+
+        return Booking.find {
+            var op = (Bookings.user eq userId)
+            if (startDateTime != null) {
+                op = op and (Bookings.start greaterEq startDateTime)
+            }
+            if (endDateTime != null) {
+                op = op and (Bookings.end lessEq endDateTime)
+            }
+            op
+        }
+            .orderBy(Bookings.start to SortOrder.ASC)
+            .with(Booking::user, Booking::room)
+            .toList()
+    }
 
     override fun findByRoomIdsAndDate(roomIds: List<Int>, date: LocalDate): List<Booking> {
         if (roomIds.isEmpty()) {

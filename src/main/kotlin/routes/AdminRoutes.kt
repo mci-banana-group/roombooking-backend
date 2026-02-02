@@ -8,6 +8,7 @@ import edu.mci.model.api.request.UpdateRoomRequest
 import edu.mci.model.api.request.UpdateUserRoleRequest
 import edu.mci.model.api.response.AdminDashboardResponse
 import edu.mci.model.api.response.AdminRoomResponse
+import edu.mci.model.api.response.AdminUserBookingResponse
 import edu.mci.service.AdminService
 import edu.mci.service.AdminUserService
 import edu.mci.service.BookingService
@@ -250,6 +251,47 @@ fun Route.adminRoutes(
                     )
                 }
             }
+        }
+
+        /**
+         * Get bookings for a specific user. Only accessible by admins.
+         *
+         * @tag Admin
+         * @path userId [Int] The ID of the user.
+         * @query start [String] Optional start date-time (ISO 8601).
+         * @query end [String] Optional end date-time (ISO 8601).
+         * @response 200 application/json [AdminUserBookingResponse] List of bookings.
+         * @response 400 text/plain Invalid request data
+         * @response 401 text/plain Unauthorized
+         * @response 403 text/plain Forbidden (not an admin)
+         */
+        get("/users/{userId}/bookings") {
+            val userId = call.parameters["userId"]?.toIntOrNull()
+            if (userId == null) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid User ID")
+                return@get
+            }
+
+            val queryParams = call.request.queryParameters
+            val startStr = queryParams["start"]
+            val endStr = queryParams["end"]
+
+            val start = startStr?.let {
+                runCatching { Instant.parse(it) }.getOrElse {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid 'start' date format. Use ISO 8601")
+                    return@get
+                }
+            }
+
+            val end = endStr?.let {
+                runCatching { Instant.parse(it) }.getOrElse {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid 'end' date format. Use ISO 8601")
+                    return@get
+                }
+            }
+
+            val bookings = bookingService.getBookingsForUserAdmin(userId, start, end)
+            call.respond(bookings)
         }
 
         /**

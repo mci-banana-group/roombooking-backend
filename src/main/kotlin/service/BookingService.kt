@@ -5,6 +5,7 @@ import edu.mci.model.db.toResponse
 import edu.mci.model.api.response.BookingResponse
 import edu.mci.model.api.request.CheckInRequest
 import edu.mci.model.api.request.CreateBookingRequest
+import edu.mci.model.api.response.AdminUserBookingResponse
 import edu.mci.repository.BookingRepository
 import edu.mci.repository.RoomRepository
 import edu.mci.repository.UserRepository
@@ -22,6 +23,20 @@ class BookingService(
 ) {
     fun getBookingsForUser(userId: Int): List<BookingResponse> = transaction {
         bookingRepository.findByUserId(userId).map { it.toResponse() }
+    }
+
+    fun getBookingsForUserAdmin(userId: Int, start: Instant?, end: Instant?): List<AdminUserBookingResponse> = transaction {
+        bookingRepository.findBookingsByUserId(userId, start, end).map { booking ->
+            AdminUserBookingResponse(
+                id = booking.id.value,
+                roomId = booking.room?.id?.value,
+                roomName = booking.room?.name,
+                userId = booking.user?.id?.value,
+                startTime = booking.start.toInstant(TimeZone.UTC),
+                endTime = booking.end.toInstant(TimeZone.UTC),
+                status = booking.status.name
+            )
+        }
     }
 
     fun getBookingsForRoom(roomId: Int, start: Instant, end: Instant?, limit: Int?): List<BookingResponse> = transaction {
