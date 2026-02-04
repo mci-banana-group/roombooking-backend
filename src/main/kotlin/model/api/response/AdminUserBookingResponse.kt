@@ -11,5 +11,6 @@ data class AdminUserBookingResponse(
     val userId: Int?,
     val startTime: Instant,
     val endTime: Instant,
-    val status: String
+    val status: String,
+    val description: String?
 )

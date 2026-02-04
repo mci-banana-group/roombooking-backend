@@ -34,7 +34,8 @@ class BookingService(
                 userId = booking.user?.id?.value,
                 startTime = booking.start.toInstant(TimeZone.UTC),
                 endTime = booking.end.toInstant(TimeZone.UTC),
-                status = booking.status.name
+                status = booking.status.name,
+                description = booking.description
             )
         }
     }
