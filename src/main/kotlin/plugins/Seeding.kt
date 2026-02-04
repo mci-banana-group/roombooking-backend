@@ -11,7 +11,9 @@ fun Application.seedData() {
     transaction {
         if (User.count() > 0) return@transaction // Already seeded
         val timeZone = TimeZone.currentSystemDefault()
-        val nowInstant = Clock.System.now()
+        // Fixed reference date: 05.02.2026 10:00
+        val fixedNow = LocalDateTime(2026, 2, 5, 10, 0)
+        val nowInstant = fixedNow.toInstant(timeZone)
 
         // Global counter for room numbers
         var nextRoomNumber = 1
@@ -77,10 +79,10 @@ fun Application.seedData() {
         }
 
         val student1 = User.new {
-            email = "lena.student@mci.edu"
+            email = "baran.sagis@mci.edu"
             password = passwordService.hashPassword("password")
-            firstName = "Lena"
-            lastName = "Gruber"
+            firstName = "Baran"
+            lastName = "Sagis"
             permissionLevel = PermissionLevel.USER
             role = Role.STUDENT
         }
@@ -267,6 +269,8 @@ fun Application.seedData() {
         )
 
         val allUsers = listOf(admin, staff1, staff2, lecturer1, lecturer2, lecturer3, student1, student2, student3, student4)
+        // Exclude Baran (student1) and Admin from general noise bookings to keep their counts controlled
+        val cyclicalUsers = allUsers.filter { it != student1 && it != admin }
 
         val today = nowInstant.toLocalDateTime(timeZone).date
         val pastDates = (3..90 step 6).map { offset -> today.minus(DatePeriod(days = offset)) }
@@ -274,7 +278,7 @@ fun Application.seedData() {
         val demoDate = LocalDate(2026, 2, 5)
         val demoRooms = setOf(mci1_308, mci2_164, mci4_4B008, mci4_4C501)
         val futureDatesBase = futureDates.filter { it != demoDate }.ifEmpty { futureDates }
-        val januaryDates = (1..31).map { day -> LocalDate(2026, 1, day) }
+        val spreadDates = (-14..14).map { offset -> fixedNow.date.plus(DatePeriod(days = offset)) }.filter { it != demoDate }
         val nearPastDates = (1..7).map { offset -> today.minus(DatePeriod(days = offset)) }
         val nearFutureDates = (0..14).map { offset -> today.plus(DatePeriod(days = offset)) }.filter { it != demoDate }
 
@@ -458,13 +462,13 @@ fun Application.seedData() {
         }
 
         allRooms.forEachIndexed { index, room ->
-            januaryDates.forEachIndexed { dayIndex, date ->
+            spreadDates.forEachIndexed { dayIndex, date ->
                 addSeedBooking(
                     date = date,
                     slot = index + dayIndex,
                     durationHours = 2,
                     status = pastStatuses[(index + dayIndex) % pastStatuses.size],
-                    user = allUsers[(index + dayIndex) % allUsers.size],
+                    user = cyclicalUsers[(index + dayIndex) % cyclicalUsers.size],
                     room = room,
                     description = nextDescription()
                 )
@@ -473,7 +477,7 @@ fun Application.seedData() {
                     slot = index + dayIndex + 1,
                     durationHours = 2,
                     status = pastStatuses[(index + dayIndex + 2) % pastStatuses.size],
-                    user = allUsers[(index + dayIndex + 3) % allUsers.size],
+                    user = cyclicalUsers[(index + dayIndex + 3) % cyclicalUsers.size],
                     room = room,
                     description = nextDescription()
                 )
@@ -485,7 +489,7 @@ fun Application.seedData() {
                     slot = index + dayIndex,
                     durationHours = 2,
                     status = pastStatuses[(index + dayIndex) % pastStatuses.size],
-                    user = allUsers[(index + dayIndex) % allUsers.size],
+                    user = cyclicalUsers[(index + dayIndex) % cyclicalUsers.size],
                     room = room,
                     description = nextDescription()
                 )
@@ -494,7 +498,7 @@ fun Application.seedData() {
                     slot = index + dayIndex + 2,
                     durationHours = 2,
                     status = pastStatuses[(index + dayIndex + 2) % pastStatuses.size],
-                    user = allUsers[(index + dayIndex + 3) % allUsers.size],
+                    user = cyclicalUsers[(index + dayIndex + 3) % cyclicalUsers.size],
                     room = room,
                     description = nextDescription()
                 )
@@ -506,7 +510,7 @@ fun Application.seedData() {
                     slot = index + dayIndex + 1,
                     durationHours = 2,
                     status = futureStatuses[(index + dayIndex) % futureStatuses.size],
-                    user = allUsers[(index + dayIndex + 1) % allUsers.size],
+                    user = cyclicalUsers[(index + dayIndex + 1) % cyclicalUsers.size],
                     room = room,
                     description = nextDescription()
                 )
@@ -515,7 +519,7 @@ fun Application.seedData() {
                     slot = index + dayIndex + 3,
                     durationHours = 2,
                     status = futureStatuses[(index + dayIndex + 2) % futureStatuses.size],
-                    user = allUsers[(index + dayIndex + 3) % allUsers.size],
+                    user = cyclicalUsers[(index + dayIndex + 3) % cyclicalUsers.size],
                     room = room,
                     description = nextDescription()
                 )
@@ -531,7 +535,7 @@ fun Application.seedData() {
                     slot = index + i,
                     durationHours = 2,
                     status = pastStatuses[(index + i) % pastStatuses.size],
-                    user = allUsers[(index + i) % allUsers.size],
+                    user = cyclicalUsers[(index + i) % cyclicalUsers.size],
                     room = room,
                     description = nextDescription()
                 )
@@ -543,7 +547,7 @@ fun Application.seedData() {
                 slot = index + 2,
                 durationHours = 2,
                 status = currentStatuses[index % currentStatuses.size],
-                user = allUsers[(index + 2) % allUsers.size],
+                user = cyclicalUsers[(index + 2) % cyclicalUsers.size],
                 room = room,
                 description = nextDescription()
             )
@@ -555,7 +559,7 @@ fun Application.seedData() {
                 slot = index + 1,
                 durationHours = 2,
                 status = futureStatuses[index % futureStatuses.size],
-                user = allUsers[(index + 1) % allUsers.size],
+                user = cyclicalUsers[(index + 1) % cyclicalUsers.size],
                 room = room,
                 description = nextDescription()
             )
@@ -564,7 +568,7 @@ fun Application.seedData() {
                 slot = index + 3,
                 durationHours = 2,
                 status = futureStatuses[(index + 2) % futureStatuses.size],
-                user = allUsers[(index + 3) % allUsers.size],
+                user = cyclicalUsers[(index + 3) % cyclicalUsers.size],
                 room = room,
                 description = nextDescription()
             )
@@ -576,7 +580,7 @@ fun Application.seedData() {
                 slot = index,
                 durationHours = 2,
                 status = BookingStatus.RESERVED,
-                user = allUsers[(index + 1) % allUsers.size],
+                user = cyclicalUsers[(index + 1) % cyclicalUsers.size],
                 room = room,
                 description = "Live Demo Hold"
             )
@@ -616,6 +620,104 @@ fun Application.seedData() {
             channel = NotificationChannel.EMAIL
             user = student1
             booking = booking5
+        }
+
+        // --- Special Bookings for Baran (student1) ---
+        val baranOffsets = listOf(-14, -8, -3, -1, 2, 4, 9, 15, 22, 28)
+        val smallRooms = listOf(mci1_308, mci2_164, mci4_4B008, mci4_4C501)
+
+        baranOffsets.forEachIndexed { index, offset ->
+            val date = fixedNow.date.plus(DatePeriod(days = offset))
+            val isPast = offset < 0
+            val status = if (isPast) BookingStatus.COMPLETED else BookingStatus.RESERVED
+            // Rotate rooms
+            val room = smallRooms[index % smallRooms.size]
+
+            addSeedBooking(
+                date = date,
+                slot = 1 + (index % 5), // Vary bookings between slots 1-5 (approx 10:00 - 18:00 start)
+                durationHours = if (index % 3 == 0) 4 else 2,
+                status = status,
+                user = student1,
+                room = room,
+                description = "Self Study Session ${index + 1}"
+            )
+
+        }
+
+        // --- Special Bookings for Admin ---
+        val adminOffsets = listOf(-2, 3, 7, 12, 18)
+        adminOffsets.forEachIndexed { index, offset ->
+             addSeedBooking(
+                date = fixedNow.date.plus(DatePeriod(days = offset)),
+                slot = 2,
+                durationHours = 1,
+                status = BookingStatus.RESERVED,
+                user = admin,
+                room = mci1_308, // Admin likes the conference room
+                description = "Admin Review ${index + 1}"
+            )
+        }
+
+        // --- Working Hours Bookings for Feb 5 & 6 ---
+        // Ensure some intensity on these specific days
+        val workingDays = listOf(
+             LocalDate(2026, 2, 5),
+             LocalDate(2026, 2, 6)
+        )
+        val workingHourUsers = listOf(staff1, staff2, lecturer2, lecturer3) // Exclude limited users
+        
+        workingDays.forEach { date ->
+             // Morning block
+             addSeedBooking(
+                 date = date,
+                 slot = 0, // 08:00
+                 durationHours = 3,
+                 status = BookingStatus.RESERVED,
+                 user = workingHourUsers[0],
+                 room = mci4_4A027,
+                 description = "Morning Workshop"
+             )
+             addSeedBooking(
+                 date = date,
+                 slot = 1, // 10:00 start (overlap slightly or adjacent)
+                 durationHours = 2,
+                 status = BookingStatus.RESERVED,
+                 user = workingHourUsers[1],
+                 room = mci3_111,
+                 description = "Team Sync"
+             )
+             
+             // Afternoon block
+             addSeedBooking(
+                 date = date,
+                 slot = 3, // 14:00
+                 durationHours = 2,
+                 status = BookingStatus.RESERVED,
+                 user = workingHourUsers[2],
+                 room = mci1_301,
+                 description = "Client Presentation"
+             )
+             addSeedBooking(
+                 date = date,
+                 slot = 4, // 16:00
+                 durationHours = 1,
+                 status = BookingStatus.RESERVED,
+                 user = workingHourUsers[3],
+                 room = mci5_185,
+                 description = "Wrap-up"
+             )
+        }
+
+        // --- Searched Items Seeding ---
+        val searchTerms = listOf("Meeting", "Lab", "Seminar", "Project", "Workshop", "Exam", "Room 301", "MCI V", "Display", "Quiet", "Computer")
+        repeat(50) {
+            val randomDaysAgo = (0..30).random()
+            val randomHoursAgo = (0..23).random()
+            SearchedItem.new {
+                searchTerm = searchTerms.random()
+                searchedAt = t(days = -randomDaysAgo, hours = -randomHoursAgo)
+            }
         }
     }
 
