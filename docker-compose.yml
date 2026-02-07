@@ -7,6 +7,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
+      DB_MODE: postgres
       DB_URL: jdbc:postgresql://postgres:5432/roombooking
       DB_USER: admin
       DB_PASSWORD: password

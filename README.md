@@ -1,5 +1,39 @@
 # roombooking
 
+## Database
+By default, local runs use the in-memory H2 database. When running with Docker/Docker Compose, the app uses PostgreSQL.
+
+Quick start (local via Gradle, H2 in-memory):
+```bash
+./gradlew run
+```
+
+This starts the backend on `http://localhost:8080`. It uses H2, an in-memory database that runs inside the app process (no external DB needed). Data is not persisted between restarts. Use the API as usual, or browse Swagger at `http://localhost:8080/swagger`.
+
+H2 console (optional):
+- Enable it by uncommenting the H2 web console line in `src/main/kotlin/plugins/Databases.kt`.
+- Then open `http://localhost:8082` and use JDBC URL `jdbc:h2:mem:regular`, user `root`, password empty.
+
+Run with PostgreSQL via Docker Compose (local containers):
+```bash
+docker compose up --build
+```
+
+Connection details (from `docker-compose.yml`):
+- **Host/Port**: `localhost:5433`
+- **Database**: `roombooking`
+- **Username**: `admin`
+- **Password**: `password`
+
+pgAdmin (from docker-compose):
+- Open `http://localhost:5050`
+- Login with `admin@mci.edu` / `password`
+
+Optional override:
+- Set `DB_MODE=postgres` to force PostgreSQL, or `DB_MODE=inmemory` to force H2.
+
+---
+
 This project was created using the [Ktor Project Generator](https://start.ktor.io).
 
 Here are some useful links to get you started:
@@ -96,32 +130,6 @@ If the server starts successfully, you'll see the following output:
 2024-12-04 14:32:45.584 [main] INFO  Application - Application started in 0.303 seconds.
 2024-12-04 14:32:45.682 [main] INFO  Application - Responding at http://0.0.0.0:8080
 ```
-
-## PostgreSQL Database
-As for now, when used with the PostgreSQL, the application will run with the following command:
-```bash
-docker compose up --build
-```
-
-The PostgreSQL data is persisted in the `postgres_data` volume (local on your docker), so it survives restarts.
-
-Tables, columns, and data are created (as for now) by the application when it starts for the first time.
-
-If you made changes and want to reset the database, you can delete the `postgres_data` volume and restart the application with the following commands:
-```bash
-docker compose down
-docker compose up -d
-```
-
-You can connect and manage the database using pgAdmin or the following command:
-```bash
-psql "host=127.0.0.1 port=5433 dbname=roombooking user=admin"
-```
-Or connecting through pgAdmin. Make sure to use the correct port number as it stands in the docker-compose.yml file (5433 for now).
-
-Use the following credentials to connect:
-- **Username**: `admin`
-- **Password**: `banana`
 
 ## MQTT Integration & Room Displays
 

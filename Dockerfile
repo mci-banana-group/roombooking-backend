@@ -8,5 +8,6 @@ RUN ./gradlew clean build --no-daemon -Pkotlin.compiler.execution.strategy=in-pr
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/build/libs/roombooking-all.jar app.jar
+ENV DB_MODE=postgres
 EXPOSE 8080
 CMD ["java","-jar","/app/app.jar"]
