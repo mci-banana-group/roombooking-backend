@@ -1,10 +1,11 @@
 package edu.mci.service
 
-import edu.mci.model.db.BookingStatus
+import edu.mci.model.db.*
 import edu.mci.model.db.toResponse
 import edu.mci.model.api.response.BookingResponse
 import edu.mci.model.api.request.CheckInRequest
 import edu.mci.model.api.request.CreateBookingRequest
+import edu.mci.model.api.response.AdminUserBookingResponse
 import edu.mci.repository.BookingRepository
 import edu.mci.repository.RoomRepository
 import edu.mci.repository.UserRepository
@@ -12,6 +13,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import kotlinx.datetime.Clock.System.now
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.Instant
 
 class BookingService(
     private val bookingRepository: BookingRepository,
@@ -21,6 +23,25 @@ class BookingService(
 ) {
     fun getBookingsForUser(userId: Int): List<BookingResponse> = transaction {
         bookingRepository.findByUserId(userId).map { it.toResponse() }
+    }
+
+    fun getBookingsForUserAdmin(userId: Int, start: Instant?, end: Instant?): List<AdminUserBookingResponse> = transaction {
+        bookingRepository.findBookingsByUserId(userId, start, end).map { booking ->
+            AdminUserBookingResponse(
+                id = booking.id.value,
+                roomId = booking.room?.id?.value,
+                roomName = booking.room?.name,
+                userId = booking.user?.id?.value,
+                startTime = booking.start.toInstant(TimeZone.UTC),
+                endTime = booking.end.toInstant(TimeZone.UTC),
+                status = booking.status.name,
+                description = booking.description
+            )
+        }
+    }
+
+    fun getBookingsForRoom(roomId: Int, start: Instant, end: Instant?, limit: Int?): List<BookingResponse> = transaction {
+        bookingRepository.findBookingsByRoomId(roomId, start, end, limit).map { it.toResponse() }
     }
 
     fun createBooking(userId: Int, createDto: CreateBookingRequest): BookingResponse = transaction {
@@ -42,7 +63,7 @@ class BookingService(
             throw IllegalStateException("Slot not available")
         }
 
-        bookingRepository.create(
+        val booking = bookingRepository.create(
             user = user,
             room = room,
             start = createDto.start,
@@ -50,7 +71,9 @@ class BookingService(
             description = createDto.description,
             gracePeriodMin = 15, // TODO fetch from config set by an admin
             confirmationCode = (1000..9999).random().toString()
-        ).toResponse()
+        )
+        room.refreshStatus()
+        booking.toResponse()
     }
 
     fun updateBooking(userId: Int, bookingId: Int, updateDto: CreateBookingRequest): BookingResponse = transaction {
@@ -70,7 +93,9 @@ class BookingService(
             start = updateDto.start,
             end = updateDto.end,
             description = updateDto.description
-        ).toResponse()
+        )
+        room.refreshStatus()
+        existingBooking.toResponse()
     }
 
     fun adminCancelBooking(bookingId: Int) = transaction {
@@ -86,6 +111,7 @@ class BookingService(
         }
 
         bookingRepository.updateStatus(existingBooking, BookingStatus.ADMIN_CANCELLED)
+        existingBooking.room?.refreshStatus()
     }
 
     fun cancelBooking(userId: Int, bookingId: Int) = transaction {
@@ -101,6 +127,7 @@ class BookingService(
         }
 
         bookingRepository.updateStatus(existingBooking, BookingStatus.CANCELLED)
+        existingBooking.room?.refreshStatus()
     }
 
     fun checkIn(userId: Int, checkInRequest: CheckInRequest) = transaction {
@@ -111,8 +138,8 @@ class BookingService(
             throw IllegalAccessException("You are not authorized to check in for this booking")
         }
 
-        val roomConfirmationCode = existingBooking.room?.confirmationCode
-            ?: throw IllegalArgumentException("Room not found")
+        val room = existingBooking.room ?: throw IllegalArgumentException("Room not found")
+        val roomConfirmationCode = room.confirmationCode
 
         // Either booking confirmation code (dynamic) or room confirmation code (static fallback) must match
         if (existingBooking.confirmationCode != checkInRequest.code && roomConfirmationCode != checkInRequest.code) {
@@ -120,12 +147,11 @@ class BookingService(
         }
 
         bookingRepository.updateStatus(existingBooking, BookingStatus.CHECKED_IN)
+        room.status = RoomStatus.OCCUPIED
 
-        val roomId = existingBooking.room?.id?.value
-        if (roomId != null) {
-            mqttService.publishUnlockDoor(roomId)
-            mqttService.publishTurnOnLight(roomId)
-            mqttService.publishTurnOnHVAC(roomId)
-        }
+        val roomId = room.id.value
+        mqttService.publishUnlockDoor(roomId)
+        mqttService.publishTurnOnLight(roomId)
+        mqttService.publishTurnOnHVAC(roomId)
     }
 }

@@ -8,6 +8,7 @@ import edu.mci.model.api.request.UpdateRoomRequest
 import edu.mci.model.api.request.UpdateUserRoleRequest
 import edu.mci.model.api.response.AdminDashboardResponse
 import edu.mci.model.api.response.AdminRoomResponse
+import edu.mci.model.api.response.AdminUserBookingResponse
 import edu.mci.service.AdminService
 import edu.mci.service.AdminUserService
 import edu.mci.service.BookingService
@@ -29,6 +30,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 fun Route.adminRoutes(
     adminService: AdminService,
@@ -45,40 +48,52 @@ fun Route.adminRoutes(
              * @tag Admin
              * @query start [String] Start date-time (ISO 8601). Format: 2026-01-01T00:00:00
              * @query end [String] End date-time (ISO 8601). Format: 2026-01-31T23:59:59
-             * @query limit [Int] Max number of most searched items to return (default 10, max 100).
+             * @query equipmentLimit [Int] Max number of most searched items to return (default 10, max 100).
+             * @query roomLimit [Int] Max number of most used rooms to return (default 10, max 100).
              * @response 200 application/json [AdminDashboardResponse] Statistics for the dashboard.
              * @response 401 text/plain Unauthorized
              * @response 403 text/plain Forbidden (not an admin)
-             * @response 400 text/plain Invalid date format or limit
+             * @response 400 text/plain Invalid date format or limits
              */
             get("/stats") {
-            val queryParams = call.request.queryParameters
-            val startStr = queryParams["start"]
-            val endStr = queryParams["end"]
-            val limitStr = queryParams["limit"]
+                val queryParams = call.request.queryParameters
+                val startStr = queryParams["start"]
+                val endStr = queryParams["end"]
+                val equipmentLimitStr = queryParams["equipmentLimit"]
+                val roomLimitStr = queryParams["roomLimit"]
 
-            if (startStr == null || endStr == null) {
-                call.respond(HttpStatusCode.BadRequest, "Start and end date-time are required")
-                return@get
-            }
+                if (startStr == null || endStr == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Start and end date-time are required")
+                    return@get
+                }
 
-            val start = runCatching { LocalDateTime.parse(startStr) }.getOrNull()
-            val end = runCatching { LocalDateTime.parse(endStr) }.getOrNull()
+                val start = runCatching { LocalDateTime.parse(startStr) }.getOrNull()
+                val end = runCatching { LocalDateTime.parse(endStr) }.getOrNull()
 
-            if (start == null || end == null) {
-                call.respond(HttpStatusCode.BadRequest, "Invalid date-time format. Use ISO 8601 (e.g., 2026-01-01T00:00:00)")
-                return@get
-            }
+                if (start == null || end == null) {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Invalid date-time format. Use ISO 8601 (e.g., 2026-01-01T00:00:00)"
+                    )
+                    return@get
+                }
 
-            val limit = limitStr?.toIntOrNull() ?: 10
-            if (limit <= 0) {
-                call.respond(HttpStatusCode.BadRequest, "Limit must be a positive integer")
-                return@get
-            }
-            val finalLimit = limit.coerceAtMost(100)
+                val equipmentLimit = equipmentLimitStr?.toIntOrNull() ?: 10
+                if (equipmentLimit <= 0) {
+                    call.respond(HttpStatusCode.BadRequest, "equipmentLimit must be a positive integer")
+                    return@get
+                }
+                val finalEquipmentLimit = equipmentLimit.coerceAtMost(100)
 
-            val stats = adminService.getDashboardStats(start, end, finalLimit)
-            call.respond(stats)
+                val roomLimit = roomLimitStr?.toIntOrNull() ?: 10
+                if (roomLimit <= 0) {
+                    call.respond(HttpStatusCode.BadRequest, "roomLimit must be a positive integer")
+                    return@get
+                }
+                val finalRoomLimit = roomLimit.coerceAtMost(100)
+
+                val stats = adminService.getDashboardStats(start, end, finalEquipmentLimit, finalRoomLimit)
+                call.respond(stats)
         }
 
         /**
@@ -236,6 +251,47 @@ fun Route.adminRoutes(
                     )
                 }
             }
+        }
+
+        /**
+         * Get bookings for a specific user. Only accessible by admins.
+         *
+         * @tag Admin
+         * @path userId [Int] The ID of the user.
+         * @query start [String] Optional start date-time (ISO 8601).
+         * @query end [String] Optional end date-time (ISO 8601).
+         * @response 200 application/json [AdminUserBookingResponse] List of bookings.
+         * @response 400 text/plain Invalid request data
+         * @response 401 text/plain Unauthorized
+         * @response 403 text/plain Forbidden (not an admin)
+         */
+        get("/users/{userId}/bookings") {
+            val userId = call.parameters["userId"]?.toIntOrNull()
+            if (userId == null) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid User ID")
+                return@get
+            }
+
+            val queryParams = call.request.queryParameters
+            val startStr = queryParams["start"]
+            val endStr = queryParams["end"]
+
+            val start = startStr?.let {
+                runCatching { Instant.parse(it) }.getOrElse {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid 'start' date format. Use ISO 8601")
+                    return@get
+                }
+            }
+
+            val end = endStr?.let {
+                runCatching { Instant.parse(it) }.getOrElse {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid 'end' date format. Use ISO 8601")
+                    return@get
+                }
+            }
+
+            val bookings = bookingService.getBookingsForUserAdmin(userId, start, end)
+            call.respond(bookings)
         }
 
         /**
@@ -444,6 +500,55 @@ fun Route.adminRoutes(
             )
 
             call.respond(rooms)
+        }
+
+        /**
+         * Get bookings for a specific room. Only accessible by admins.
+         *
+         * @tag Admin
+         * @path roomId [Int] The ID of the room.
+         * @query from [String] Optional start date-time (ISO 8601). Defaults to now.
+         * @query to [String] Optional end date-time (ISO 8601).
+         * @query limit [Int] Optional max number of bookings.
+         * @response 200 application/json [BookingResponse] List of bookings.
+         * @response 400 text/plain Invalid request data
+         * @response 401 text/plain Unauthorized
+         * @response 403 text/plain Forbidden (not an admin)
+         */
+        get("/rooms/{roomId}/bookings") {
+            val roomId = call.parameters["roomId"]?.toIntOrNull()
+            if (roomId == null) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid Room ID")
+                return@get
+            }
+
+            val queryParams = call.request.queryParameters
+            val fromStr = queryParams["from"]
+            val toStr = queryParams["to"]
+            val limitStr = queryParams["limit"]
+
+            val from = if (fromStr != null) {
+                runCatching { Instant.parse(fromStr) }.getOrElse {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid 'from' date format. Use ISO 8601")
+                    return@get
+                }
+            } else {
+                Clock.System.now()
+            }
+
+            val to = if (toStr != null) {
+                runCatching { Instant.parse(toStr) }.getOrElse {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid 'to' date format. Use ISO 8601")
+                    return@get
+                }
+            } else {
+                null
+            }
+
+            val limit = limitStr?.toIntOrNull()
+
+            val bookings = bookingService.getBookingsForRoom(roomId, from, to, limit)
+            call.respond(bookings)
         }
 
         /**

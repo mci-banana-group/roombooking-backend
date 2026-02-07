@@ -16,54 +16,84 @@ This document describes the default seed data created by `seedData()` in `src/ma
 
 ## Buildings and Rooms
 
-### Main Building
-- 101 Seminar Room A (cap 20, FREE) equipment: BEAMER x1, WHITEBOARD x2
-- 102 Seminar Room B (cap 24, RESERVED) equipment: BEAMER x1, HDMI_CABLE x2
-- 103 Lecture Hall 1 (cap 80, FREE) equipment: BEAMER x2, DISPLAY x1
-- 201 Project Studio (cap 30, OCCUPIED) equipment: WHITEBOARD x3, HDMI_CABLE x2
-- 202 Conference Room (cap 18, FREE) equipment: DISPLAY x2, BEAMER x1
-- 203 Thesis Room (cap 12, RESERVED) equipment: WHITEBOARD x1
-- 204 Workshop Studio (cap 26, FREE) equipment: BEAMER x1, WHITEBOARD x2
+### MCI I (Universitätsstraße 15, 6020 Innsbruck)
+- 234 (cap 26, FREE) seating: Schule mit Mittelgang
+- 301 (cap 66, FREE) seating: Schule mit Mittelgang, equipment: BEAMER x1, WHITEBOARD x2, HDMI_CABLE x1
+- 302 (cap 66, FREE) seating: Schule mit Mittelgang, equipment: BEAMER x1, WHITEBOARD x2, HDMI_CABLE x1
+- 303 (cap 54, FREE) seating: Schule mit Mittelgang
+- 304 (cap 54, FREE) seating: Schule mit Mittelgang
+- 305 (cap 60, FREE) seating: Schule mit Mittelgang
+- 306 (cap 56, FREE) seating: Schule mit Mittelgang
+- 307 (cap 32, FREE) seating: Schule mit Mittelgang
+- 308 (cap 18, FREE) seating: Konferenzraum, equipment: DISPLAY x1, HDMI_CABLE x1
+- 309 (cap 45, FREE) seating: Schule mit Mittelgang
+- 310 (cap 32, FREE) seating: Schule mit Mittelgang
+- 401/402 (cap 20, FREE) seating: U-Bestuhlung
+- 403 (cap 28, FREE) seating: Parlament
+- 404 (cap 28, FREE) seating: Parlament
+- 405 (cap 28, FREE) seating: Parlament
+- 406 (cap 32, FREE) seating: Parlament
 
-### Tech Center
-- 110 Computer Lab 1 (cap 28, FREE) equipment: DISPLAY x28, HDMI_CABLE x20
-- 120 Robotics Lab (cap 16, OCCUPIED) equipment: WHITEBOARD x2, DISPLAY x4
-- 210 Innovation Classroom (cap 32, FREE) equipment: BEAMER x1, WHITEBOARD x2
-- 220 Makerspace (cap 14, RESERVED) equipment: BEAMER x1, HDMI_CABLE x4
-- 230 Network Lab (cap 18, FREE) equipment: DISPLAY x6, HDMI_CABLE x6
-- 240 AR/VR Studio (cap 12, RESERVED) equipment: DISPLAY x4
+### MCI II (Universitätsstraße 7, 6020 Innsbruck)
+- 051 (cap 61, FREE) seating: Schule mit Mittelgang
+- 052 (cap 69, FREE) seating: Schule mit Mittelgang
+- 053 (cap 78, FREE) seating: Schule mit Mittelgang
+- 162 (cap 8, FREE) seating: WOW-Raum
+- 163 (cap 8, FREE) seating: WOW-Raum
+- 164 (cap 12, FREE) seating: Besprechungsraum, equipment: DISPLAY x1, HDMI_CABLE x1
+- 551 (cap 40, FREE) seating: Schule mit Mittelgang
+- 552 (cap 50, FREE) seating: Schule mit Mittelgang
 
-### Library Annex
-- 10 Quiet Study 1 (cap 12, FREE) equipment: WHITEBOARD x1
-- 11 Quiet Study 2 (cap 10, FREE) equipment: WHITEBOARD x1
-- 20 Group Study 1 (cap 8, RESERVED) equipment: DISPLAY x1
-- 21 Group Study 2 (cap 8, FREE) equipment: DISPLAY x1
-- 30 Media Study (cap 6, RESERVED) equipment: DISPLAY x1
+### MCI III (Weiherburggasse 8, 6020 Innsbruck)
+- 011 (cap 54, FREE) seating: Schule mit Mittelgang
+- 012 (cap 54, FREE) seating: Schule mit Mittelgang
+- 013 (cap 54, FREE) seating: Schule mit Mittelgang
+- 014 (cap 30, FREE) seating: Schule mit Mittelgang
+- 111 (cap 54, FREE) seating: Schule mit Mittelgang
+- 112 (cap 60, FREE) seating: Schule mit Mittelgang
+- 113 (cap 30, FREE) seating: Schule mit Mittelgang
 
-### Innovation Hub
-- 301 Startup Garage (cap 26, FREE) equipment: BEAMER x1, WHITEBOARD x2
-- 302 Design Lab (cap 20, FREE) equipment: BEAMER x1, DISPLAY x2
-- 401 Board Room (cap 14, RESERVED) equipment: DISPLAY x1, HDMI_CABLE x2
-- 402 Strategy Room (cap 16, FREE) equipment: DISPLAY x2
-- 501 Investor Lounge (cap 10, RESERVED) equipment: DISPLAY x1
+### MCI IV (Maximilianstraße 2, 6020 Innsbruck)
+- 4B-001 (cap 29, FREE) seating: Schule mit Mittelgang
+- 4B-003 (cap 30, FREE) seating: Schule mit Mittelgang
+- 4B-005 (cap 23, FREE) seating: Schule mit Mittelgang
+- 4B-006 (cap 33, FREE) seating: Schule mit Mittelgang
+- 4B-007 (cap 30, FREE) seating: Schule mit Mittelgang
+- 4B-008 (cap 16, FREE) seating: Besprechungsraum, equipment: DISPLAY x1, HDMI_CABLE x1
+- 4A-020 (cap 58, FREE) seating: Schule mit Mittelgang, equipment: BEAMER x1, WHITEBOARD x2, HDMI_CABLE x1
+- 4A-024 (cap 68, FREE) seating: Schule mit Mittelgang, equipment: BEAMER x1, WHITEBOARD x2, HDMI_CABLE x1
+- 4A-027 (cap 60, FREE) seating: Schule mit Mittelgang
+- 1A-135 (cap 45, FREE) seating: e-exam-Raum/SR
+- 4B-115 (cap 22, FREE) seating: EDV-Raum, equipment: DISPLAY x22, WHITEBOARD x1
+- 4A-393 (cap 48, FREE) seating: Schule mit Mittelgang
+- 4A-438 (cap 36, FREE) seating: Schule mit Mittelgang
+- 4A-439 (cap 68, FREE) seating: Schule mit Mittelgang
+- 4C-501 (cap 12, FREE) seating: Schule mit Mittelgang
+- 4C-502 (cap 25, FREE) seating: EDV-Raum, equipment: DISPLAY x25, WHITEBOARD x1
+- 4C-503 (cap 25, FREE) seating: EDV-Raum, equipment: DISPLAY x25, WHITEBOARD x1
+- 4C-504 (cap 27, FREE) seating: EDV-Raum
+- 4C-505 (cap 45, FREE) seating: EDV-Raum
 
-### Sports Hall
-- 1 Gym Hall (cap 60, OCCUPIED) equipment: DISPLAY x1
-- 2 Dance Studio (cap 25, FREE) equipment: DISPLAY x1
-- 3 Yoga Room (cap 18, FREE) equipment: DISPLAY x1
+### MCI V (Kapuzinergasse 9, 6020 Innsbruck)
+- 181 (cap 40, FREE) seating: Schule mit Mittelgang
+- 182 (cap 40, FREE) seating: Schule mit Mittelgang
+- 183 (cap 40, FREE) seating: Schule mit Mittelgang
+- 184 (cap 44, FREE) seating: Schule mit Mittelgang
+- 185 (cap 52, FREE) seating: Schule mit Mittelgang
+- 283 (cap 40, FREE) seating: Schule mit Mittelgang
 
 ## Bookings (relative to seed time)
-- Lecturer Meeting (lecturer@mci.edu) in Main Building 101, RESERVED, starts in +2h
-- Project Sync (mia.lecturer@mci.edu) in Main Building 201, CHECKED_IN, started -4h
-- Data Science Lab (david.lecturer@mci.edu) in Tech Center 110, RESERVED, starts in +1d
-- Robotics Demo (sara.staff@mci.edu) in Tech Center 120, RESERVED, starts in +2d
-- Study Group (lena.student@mci.edu) in Library Annex 20, NO_SHOW, started -1d
-- Startup Pitch Prep (tom.student@mci.edu) in Innovation Hub 301, RESERVED, starts in +3d
-- Board Review (milan.staff@mci.edu) in Innovation Hub 401, RESERVED, starts in +6h
-- Dance Workshop (nina.student@mci.edu) in Sports Hall 2, CANCELLED, started -10h
-- Guest Lecture (lecturer@mci.edu) in Main Building 103, RESERVED, starts in +4d
-- Marketing Workshop (armin.student@mci.edu) in Main Building 202, CHECKED_IN, started -3h
+- Lecturer Meeting (lecturer@mci.edu) in MCI I 301, RESERVED, starts in +2h
+- Project Sync (mia.lecturer@mci.edu) in MCI II 164, CHECKED_IN, started -4h
+- Data Science Lab (david.lecturer@mci.edu) in MCI IV 4B-115, RESERVED, starts in +1d +1h
+- Robotics Demo (sara.staff@mci.edu) in MCI IV 4C-502, RESERVED, starts in +2d +4h
+- Study Group (lena.student@mci.edu) in MCI III 014, NO_SHOW, started -1d -2h
+- Startup Pitch Prep (tom.student@mci.edu) in MCI V 181, RESERVED, starts in +3d +2h
+- Board Review (milan.staff@mci.edu) in MCI I 308, RESERVED, starts in +6h
+- Student Union Workshop (nina.student@mci.edu) in MCI I 401/402, CANCELLED, started -10h
+- Guest Lecture (lecturer@mci.edu) in MCI IV 4A-020, RESERVED, starts in +4d +1h
+- Marketing Workshop (armin.student@mci.edu) in MCI V 185, CHECKED_IN, started -3h
 
 ## Confirmations and Notifications
 - Presence confirmations: Project Sync (QR_CODE), Marketing Workshop (NFC)
-- Notifications: Meeting reminder, check-in confirmation, no-show notice
+- Notifications: Reminder (Lecturer Meeting), check-in confirmation (Project Sync), no-show notice (Study Group)

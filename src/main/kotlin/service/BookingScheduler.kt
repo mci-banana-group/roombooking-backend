@@ -1,14 +1,13 @@
 package edu.mci.service
 
-import edu.mci.model.db.BookingStatus
+import edu.mci.model.db.*
 import edu.mci.repository.BookingRepository
 import kotlinx.coroutines.*
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import org.jetbrains.exposed.sql.and
 
 class BookingScheduler(
     private val bookingRepository: BookingRepository,
@@ -28,7 +27,7 @@ class BookingScheduler(
                 } catch (e: Exception) {
                     logger.error("Error checking expired bookings", e)
                 }
-                delay(5.minutes)
+                delay(2.seconds)
             }
         }
     }
@@ -42,6 +41,7 @@ class BookingScheduler(
                 expiredBookings.forEach { booking ->
                     logger.info("Marking booking ${booking.id} as NO_SHOW")
                     bookingRepository.updateStatus(booking, BookingStatus.NO_SHOW)
+                    booking.room?.refreshStatus()
                 }
             }
         }
@@ -63,6 +63,7 @@ class BookingScheduler(
                         mqttService.publishLockDoor(room.id.value)
                         mqttService.publishTurnOffLight(room.id.value)
                         mqttService.publishTurnOffHVAC(room.id.value)
+                        room.refreshStatus()
                     }
                 }
             }
@@ -83,6 +84,7 @@ class BookingScheduler(
                     }
                     logger.info("Publishing code for booking ${booking.id} in room ${room.roomNumber}")
                     mqttService.publishRoomCode(room.id.value, booking.confirmationCode)
+                    room.refreshStatus()
                 }
             }
         }

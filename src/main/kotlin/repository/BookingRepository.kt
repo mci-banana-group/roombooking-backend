@@ -1,18 +1,22 @@
 package edu.mci.repository
 
+import edu.mci.model.api.response.RoomUsageCount
 import edu.mci.model.db.*
+import edu.mci.model.db.toResponse
 import kotlinx.datetime.*
 import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.SortOrder
 
 interface BookingRepository {
     fun findById(id: Int): Booking?
     fun findByUserId(userId: Int): List<Booking>
+    fun findBookingsByUserId(userId: Int, start: Instant?, end: Instant?): List<Booking>
     fun findByRoomIdsAndDate(roomIds: List<Int>, date: LocalDate): List<Booking>
+    fun findBookingsByRoomId(roomId: Int, start: Instant, end: Instant?, limit: Int?): List<Booking>
     fun findOverlappingBookings(roomId: Int, start: Instant, end: Instant): List<Booking>
     fun findExpiredReservations(dateTime: LocalDateTime): List<Booking>
     fun findBookingsCheckInWindow(dateTime: LocalDateTime): List<Booking>
@@ -41,7 +45,21 @@ interface BookingRepository {
     fun countActiveForUserDeletion(userId: Int, now: LocalDateTime): Int
     fun clearRoomReferences(roomId: Int)
     fun clearUserReferences(userId: Int)
-    fun countByStatusAndDateRange(status: BookingStatus, start: LocalDateTime, end: LocalDateTime): Int
+    fun countByStatusAndDateRangeByDay(
+        status: BookingStatus,
+        start: LocalDateTime,
+        end: LocalDateTime
+    ): Map<LocalDate, Int>
+    fun countAllByDateRangeByDay(
+        start: LocalDateTime,
+        end: LocalDateTime
+    ): Map<LocalDate, Int>
+    fun getMostUsedRoomsByOccupiedTime(
+        statuses: List<BookingStatus>,
+        start: LocalDateTime,
+        end: LocalDateTime,
+        limit: Int
+    ): List<RoomUsageCount>
 }
 
 class BookingRepositoryImpl : BookingRepository {
@@ -49,6 +67,25 @@ class BookingRepositoryImpl : BookingRepository {
 
     override fun findByUserId(userId: Int): List<Booking> =
         Booking.find { Bookings.user eq userId }.with(Booking::user).toList()
+
+    override fun findBookingsByUserId(userId: Int, start: Instant?, end: Instant?): List<Booking> {
+        val startDateTime = start?.toLocalDateTime(TimeZone.UTC)
+        val endDateTime = end?.toLocalDateTime(TimeZone.UTC)
+
+        return Booking.find {
+            var op = (Bookings.user eq userId)
+            if (startDateTime != null) {
+                op = op and (Bookings.start greaterEq startDateTime)
+            }
+            if (endDateTime != null) {
+                op = op and (Bookings.end lessEq endDateTime)
+            }
+            op
+        }
+            .orderBy(Bookings.start to SortOrder.ASC)
+            .with(Booking::user, Booking::room)
+            .toList()
+    }
 
     override fun findByRoomIdsAndDate(roomIds: List<Int>, date: LocalDate): List<Booking> {
         if (roomIds.isEmpty()) {
@@ -59,6 +96,26 @@ class BookingRepositoryImpl : BookingRepository {
         return Booking.find {
             (Bookings.room inList roomIds) and (Bookings.start greaterEq startOfDay) and (Bookings.start lessEq endOfDay)
         }.with(Booking::user).toList()
+    }
+
+    override fun findBookingsByRoomId(roomId: Int, start: Instant, end: Instant?, limit: Int?): List<Booking> {
+        val startRange = start.toLocalDateTime(TimeZone.UTC)
+        val endRange = end?.toLocalDateTime(TimeZone.UTC)
+
+        return Booking.find {
+            val base = (Bookings.room eq roomId) and (Bookings.end greaterEq startRange)
+            if (endRange != null) {
+                base and (Bookings.start lessEq endRange)
+            } else {
+                base
+            }
+        }
+            .orderBy(Bookings.start to SortOrder.ASC)
+            .let { query ->
+                if (limit != null) query.limit(limit) else query
+            }
+            .with(Booking::user)
+            .toList()
     }
 
     override fun findOverlappingBookings(roomId: Int, start: Instant, end: Instant): List<Booking> {
@@ -167,13 +224,57 @@ class BookingRepositoryImpl : BookingRepository {
     private fun activeForUserDeletionPredicate(now: LocalDateTime) =
         (Bookings.status eq BookingStatus.RESERVED) or (Bookings.status eq BookingStatus.CHECKED_IN)
 
-    override fun countByStatusAndDateRange(
+    override fun countByStatusAndDateRangeByDay(
         status: BookingStatus,
         start: LocalDateTime,
         end: LocalDateTime
-    ): Int {
+    ): Map<LocalDate, Int> {
         return Booking.find {
             (Bookings.status eq status) and (Bookings.start greaterEq start) and (Bookings.start lessEq end)
-        }.count().toInt()
+        }.groupingBy { it.start.date }.eachCount()
+    }
+
+    override fun countAllByDateRangeByDay(
+        start: LocalDateTime,
+        end: LocalDateTime
+    ): Map<LocalDate, Int> {
+        return Booking.find {
+            (Bookings.start greaterEq start) and (Bookings.start lessEq end)
+        }.groupingBy { it.start.date }.eachCount()
+    }
+
+    override fun getMostUsedRoomsByOccupiedTime(
+        statuses: List<BookingStatus>,
+        start: LocalDateTime,
+        end: LocalDateTime,
+        limit: Int
+    ): List<RoomUsageCount> {
+        if (statuses.isEmpty()) {
+            return emptyList()
+        }
+        val bookings = Booking.find {
+            (Bookings.status inList statuses) and
+                (Bookings.start greaterEq start) and
+                (Bookings.start lessEq end) and
+                Bookings.room.isNotNull()
+        }.with(Booking::room).toList()
+
+        val minutesByRoom = bookings.mapNotNull { booking ->
+            val room = booking.room ?: return@mapNotNull null
+            val durationMinutes =
+                (booking.end.toInstant(TimeZone.UTC) - booking.start.toInstant(TimeZone.UTC)).inWholeMinutes
+            room to durationMinutes
+        }.groupBy({ it.first }, { it.second })
+            .mapValues { (_, values) -> values.sum() }
+
+        return minutesByRoom.entries
+            .sortedByDescending { it.value }
+            .take(limit)
+            .map { (room, minutes) ->
+                RoomUsageCount(
+                    room = room.toResponse(),
+                    occupiedMinutes = minutes
+                )
+            }
     }
 }
