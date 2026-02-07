@@ -710,7 +710,9 @@ fun Application.seedData() {
         }
 
         // --- Searched Items Seeding ---
-        val searchTerms = listOf("Meeting", "Lab", "Seminar", "Project", "Workshop", "Exam", "Room 301", "MCI V", "Display", "Quiet", "Computer")
+        val searchTerms = EquipmentType.entries
+            .filter { it != EquipmentType.OTHER }
+            .map { it.name }
         repeat(50) {
             val randomDaysAgo = (0..30).random()
             val randomHoursAgo = (0..23).random()
