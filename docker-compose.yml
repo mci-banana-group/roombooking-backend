@@ -9,7 +9,7 @@ services:
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/roombooking
       DB_USER: admin
-      DB_PASSWORD: banana
+      DB_PASSWORD: password
       DB_DRIVER: org.postgresql.Driver
     ports:
       - "8080:8080"
@@ -20,9 +20,9 @@ services:
     environment:
       POSTGRES_DB: roombooking
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: banana
+      POSTGRES_PASSWORD: password
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d roombooking"]
+      test: [ "CMD-SHELL", "pg_isready -U admin -d roombooking" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -31,5 +31,23 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: roombooking-pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mci.edu
+      PGADMIN_DEFAULT_PASSWORD: password
+      PGPASSFILE: /pgpass
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - ./docker/pgadmin/pgpass:/pgpass:ro
+
 volumes:
   postgres_data:
+  pgadmin_data:

@@ -1,23 +1,26 @@
 ktor:
-    application:
-        modules:
-            - edu.mci.ApplicationKt.module
-    deployment:
-        host: 0.0.0.0
-        port: ${PORT:8080}
+  application:
+    modules:
+      - edu.mci.ApplicationKt.module
+  deployment:
+    host: 0.0.0.0
+    port: ${PORT:8080}
 
 jwt:
-    secret: ${JWT_SECRET:verysecret}
-    issuer: ${JWT_ISSUER:https://roombooking-backend-l7kv.onrender.com}
-    audience: ${JWT_AUDIENCE:roombooking-clients}
-    realm: "Access to room booking"
+  secret: ${JWT_SECRET:verysecret}
+  issuer: ${JWT_ISSUER:https://roombooking-backend-l7kv.onrender.com}
+  audience: ${JWT_AUDIENCE:roombooking-clients}
+  realm: "Access to room booking"
 
 mqtt:
-    brokerUrl: ${MQTT_BROKER_URL:tcp://localhost:1883}
-    clientId: ${MQTT_CLIENT_ID:RoomBookingBackend}
+  brokerUrl: ${MQTT_BROKER_URL:tcp://localhost:1883}
+  clientId: ${MQTT_CLIENT_ID:RoomBookingBackend}
+
+swagger:
+  file: ${SWAGGER_FILE:openapi/open-api.json}
 
 db:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/roombooking}
-    user: ${DB_USER:admin}
-    password: ${DB_PASSWORD:banana}
-    driver: ${DB_DRIVER:org.postgresql.Driver}
+  url: ${DB_URL:jdbc:postgresql://localhost:5433/roombooking}
+  user: ${DB_USER:admin}
+  password: ${DB_PASSWORD:password}
+  driver: ${DB_DRIVER:org.postgresql.Driver}

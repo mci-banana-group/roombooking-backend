@@ -6,15 +6,7 @@ import edu.mci.plugins.configureDatabases
 import edu.mci.plugins.configureHTTP
 import edu.mci.plugins.seedData
 import edu.mci.repository.*
-import edu.mci.routes.adminRoutes
-import edu.mci.routes.authRoutes
-import edu.mci.routes.bookingRoutes
-import edu.mci.routes.buildingRoutes
-import edu.mci.routes.roomRoutes
-import edu.mci.service.BookingScheduler
-import edu.mci.service.BookingService
-import edu.mci.service.BuildingService
-import edu.mci.service.RoomService
+import edu.mci.routes.*
 import edu.mci.service.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -104,8 +96,16 @@ private fun Application.configureRouting(
     adminService: AdminService,
     adminUserService: AdminUserService
 ) {
+    val swaggerFile =
+        environment.config.propertyOrNull("swagger.file")?.getString()
+
     routing {
-        swaggerUI(path = "/swagger", swaggerFile = "openapi/open-api.json")
+        val swaggerResource = runCatching { environment.classLoader.getResource(swaggerFile) }.getOrNull()
+        if (swaggerResource == null || swaggerFile == null) {
+            environment.log.warn("Swagger file not found on classpath: {}", swaggerFile)
+        } else {
+            swaggerUI(path = "/swagger", swaggerFile = swaggerFile)
+        }
         authRoutes(authService)
         authenticate("auth-jwt") {
             roomRoutes(roomService)
