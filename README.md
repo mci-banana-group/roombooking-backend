@@ -1,5 +1,39 @@
 # roombooking
 
+## Database
+By default, local runs use the in-memory H2 database. When running with Docker/Docker Compose, the app uses PostgreSQL.
+
+Quick start (local via Gradle, H2 in-memory):
+```bash
+./gradlew run
+```
+
+This starts the backend on `http://localhost:8080`. It uses H2, an in-memory database that runs inside the app process (no external DB needed). Data is not persisted between restarts. Use the API as usual, or browse Swagger at `http://localhost:8080/swagger`.
+
+H2 console (optional):
+- Enable it by uncommenting the H2 web console line in `src/main/kotlin/plugins/Databases.kt`.
+- Then open `http://localhost:8082` and use JDBC URL `jdbc:h2:mem:regular`, user `root`, password empty.
+
+Run with PostgreSQL via Docker Compose (local containers):
+```bash
+docker compose up --build
+```
+
+Connection details (from `docker-compose.yml`):
+- **Host/Port**: `localhost:5433`
+- **Database**: `roombooking`
+- **Username**: `admin`
+- **Password**: `password`
+
+pgAdmin (from docker-compose):
+- Open `http://localhost:5050`
+- Login with `admin@mci.edu` / `password`
+
+Optional override:
+- Set `DB_MODE=postgres` to force PostgreSQL, or `DB_MODE=inmemory` to force H2.
+
+---
+
 This project was created using the [Ktor Project Generator](https://start.ktor.io).
 
 Here are some useful links to get you started:
@@ -87,7 +121,8 @@ To build or run the project, use one of the following tasks:
 | `./gradlew buildImage`                  | Build the docker image to use with the fat JAR                       |
 | `./gradlew publishImageToLocalRegistry` | Publish the docker image locally                                     |
 | `./gradlew run`                         | Run the server                                                       |
-| `./gradlew runDocker`                   | Run using the local docker image                                     |
+| `./gradlew runDocker`                   | Run app + postgres using docker compose                              |
+
 
 If the server starts successfully, you'll see the following output:
 
@@ -95,7 +130,6 @@ If the server starts successfully, you'll see the following output:
 2024-12-04 14:32:45.584 [main] INFO  Application - Application started in 0.303 seconds.
 2024-12-04 14:32:45.682 [main] INFO  Application - Responding at http://0.0.0.0:8080
 ```
-
 
 ## MQTT Integration & Room Displays
 

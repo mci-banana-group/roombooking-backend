@@ -5,8 +5,10 @@ ktor = "3.3.3"
 logback = "1.5.13"
 exposed = "0.58.0"
 h2 = "2.3.232"
+postgresql = "42.7.4"
 
 [libraries]
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt"}
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }

@@ -11,7 +11,7 @@ import org.jetbrains.exposed.sql.and
 
 object Rooms : IntIdTable() {
     val roomNumber = integer("room_number")
-    val name = varchar("name", 100)
+    val name = varchar("name", 20)
     val description = varchar("description", 255)
     val status = enumerationByName("status", 20, RoomStatus::class)
     val confirmationCode = varchar("confirmation_code", 50)
