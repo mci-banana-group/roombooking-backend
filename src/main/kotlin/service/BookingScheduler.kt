@@ -6,7 +6,7 @@ import kotlinx.coroutines.*
 import kotlinx.datetime.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.exposed.sql.and
 
 class BookingScheduler(
@@ -27,7 +27,7 @@ class BookingScheduler(
                 } catch (e: Exception) {
                     logger.error("Error checking expired bookings", e)
                 }
-                delay(5.minutes)
+                delay(2.seconds)
             }
         }
     }
