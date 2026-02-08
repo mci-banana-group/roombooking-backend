@@ -6,11 +6,24 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
-fun Application.configureDatabases() {
-    val config = environment.config
-    val dbMode = config.propertyOrNull("db.mode")?.getString()?.lowercase() ?: "inmemory"
+enum class DbMode {
+    IN_MEMORY,
+    POSTGRES
+}
 
-    val database = if (dbMode == "inmemory") {
+fun Application.configureDatabases(): DbMode {
+    val config = environment.config
+    val rawMode = config.propertyOrNull("db.mode")?.getString()?.lowercase() ?: "inmemory"
+    val dbMode = when (rawMode) {
+        "inmemory" -> DbMode.IN_MEMORY
+        "postgres" -> DbMode.POSTGRES
+        else -> {
+            environment.log.warn("Unknown db.mode '{}'; defaulting to in-memory.", rawMode)
+            DbMode.IN_MEMORY
+        }
+    }
+
+    val database = if (dbMode == DbMode.IN_MEMORY) {
         // Start H2 Web Console if needed:
         org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start()
         Database.connect(
@@ -44,4 +57,5 @@ fun Application.configureDatabases() {
             SearchedItems
         )
     }
+    return dbMode
 }
