@@ -11,9 +11,7 @@ fun Application.seedData() {
     transaction {
         if (User.count() > 0) return@transaction // Already seeded
         val timeZone = TimeZone.currentSystemDefault()
-        // Fixed reference date: 05.02.2026 10:00
-        val fixedNow = LocalDateTime(2026, 2, 5, 10, 0)
-        val nowInstant = fixedNow.toInstant(timeZone)
+        val nowInstant = Clock.System.now()
 
         // Global counter for room numbers
         var nextRoomNumber = 1
@@ -79,10 +77,10 @@ fun Application.seedData() {
         }
 
         val student1 = User.new {
-            email = "baran.sagis@mci.edu"
+            email = "student@mci.edu"
             password = passwordService.hashPassword("password")
-            firstName = "Baran"
-            lastName = "Sagis"
+            firstName = "MCI"
+            lastName = "STUDENT"
             permissionLevel = PermissionLevel.USER
             role = Role.STUDENT
         }
@@ -268,17 +266,18 @@ fun Application.seedData() {
             mci5_181, mci5_182, mci5_183, mci5_184, mci5_185, mci5_283
         )
 
-        val allUsers = listOf(admin, staff1, staff2, lecturer1, lecturer2, lecturer3, student1, student2, student3, student4)
-        // Exclude Baran (student1) and Admin from general noise bookings to keep their counts controlled
+        val allUsers =
+            listOf(admin, staff1, staff2, lecturer1, lecturer2, lecturer3, student1, student2, student3, student4)
+        // Exclude student1 and admin from general noise bookings to keep their counts controlled
         val cyclicalUsers = allUsers.filter { it != student1 && it != admin }
 
         val today = nowInstant.toLocalDateTime(timeZone).date
         val pastDates = (3..90 step 6).map { offset -> today.minus(DatePeriod(days = offset)) }
         val futureDates = (1..30 step 5).map { offset -> today.plus(DatePeriod(days = offset)) }
-        val demoDate = LocalDate(2026, 2, 5)
+        val demoDate = today
         val demoRooms = setOf(mci1_308, mci2_164, mci4_4B008, mci4_4C501)
         val futureDatesBase = futureDates.filter { it != demoDate }.ifEmpty { futureDates }
-        val spreadDates = (-14..14).map { offset -> fixedNow.date.plus(DatePeriod(days = offset)) }.filter { it != demoDate }
+        val spreadDates = (-14..14).map { offset -> today.plus(DatePeriod(days = offset)) }.filter { it != demoDate }
         val nearPastDates = (1..7).map { offset -> today.minus(DatePeriod(days = offset)) }
         val nearFutureDates = (0..14).map { offset -> today.plus(DatePeriod(days = offset)) }.filter { it != demoDate }
 
@@ -622,12 +621,12 @@ fun Application.seedData() {
             booking = booking5
         }
 
-        // --- Special Bookings for Baran (student1) ---
-        val baranOffsets = listOf(-14, -8, -3, -1, 2, 4, 9, 15, 22, 28)
+        // --- Special Bookings for student1 ---
+        val studentOffsets = listOf(-14, -8, -3, -1, 2, 4, 9, 15, 22, 28)
         val smallRooms = listOf(mci1_308, mci2_164, mci4_4B008, mci4_4C501)
 
-        baranOffsets.forEachIndexed { index, offset ->
-            val date = fixedNow.date.plus(DatePeriod(days = offset))
+        studentOffsets.forEachIndexed { index, offset ->
+            val date = today.plus(DatePeriod(days = offset))
             val isPast = offset < 0
             val status = if (isPast) BookingStatus.COMPLETED else BookingStatus.RESERVED
             // Rotate rooms
@@ -648,8 +647,8 @@ fun Application.seedData() {
         // --- Special Bookings for Admin ---
         val adminOffsets = listOf(-2, 3, 7, 12, 18)
         adminOffsets.forEachIndexed { index, offset ->
-             addSeedBooking(
-                date = fixedNow.date.plus(DatePeriod(days = offset)),
+            addSeedBooking(
+                date = today.plus(DatePeriod(days = offset)),
                 slot = 2,
                 durationHours = 1,
                 status = BookingStatus.RESERVED,
@@ -659,54 +658,54 @@ fun Application.seedData() {
             )
         }
 
-        // --- Working Hours Bookings for Feb 5 & 6 ---
+        // --- Working Hours Bookings for today and tomorrow ---
         // Ensure some intensity on these specific days
         val workingDays = listOf(
-             LocalDate(2026, 2, 5),
-             LocalDate(2026, 2, 6)
+            today,
+            today.plus(DatePeriod(days = 1))
         )
         val workingHourUsers = listOf(staff1, staff2, lecturer2, lecturer3) // Exclude limited users
-        
+
         workingDays.forEach { date ->
-             // Morning block
-             addSeedBooking(
-                 date = date,
-                 slot = 0, // 08:00
-                 durationHours = 3,
-                 status = BookingStatus.RESERVED,
-                 user = workingHourUsers[0],
-                 room = mci4_4A027,
-                 description = "Morning Workshop"
-             )
-             addSeedBooking(
-                 date = date,
-                 slot = 1, // 10:00 start (overlap slightly or adjacent)
-                 durationHours = 2,
-                 status = BookingStatus.RESERVED,
-                 user = workingHourUsers[1],
-                 room = mci3_111,
-                 description = "Team Sync"
-             )
-             
-             // Afternoon block
-             addSeedBooking(
-                 date = date,
-                 slot = 3, // 14:00
-                 durationHours = 2,
-                 status = BookingStatus.RESERVED,
-                 user = workingHourUsers[2],
-                 room = mci1_301,
-                 description = "Client Presentation"
-             )
-             addSeedBooking(
-                 date = date,
-                 slot = 4, // 16:00
-                 durationHours = 1,
-                 status = BookingStatus.RESERVED,
-                 user = workingHourUsers[3],
-                 room = mci5_185,
-                 description = "Wrap-up"
-             )
+            // Morning block
+            addSeedBooking(
+                date = date,
+                slot = 0, // 08:00
+                durationHours = 3,
+                status = BookingStatus.RESERVED,
+                user = workingHourUsers[0],
+                room = mci4_4A027,
+                description = "Morning Workshop"
+            )
+            addSeedBooking(
+                date = date,
+                slot = 1, // 10:00 start (overlap slightly or adjacent)
+                durationHours = 2,
+                status = BookingStatus.RESERVED,
+                user = workingHourUsers[1],
+                room = mci3_111,
+                description = "Team Sync"
+            )
+
+            // Afternoon block
+            addSeedBooking(
+                date = date,
+                slot = 3, // 14:00
+                durationHours = 2,
+                status = BookingStatus.RESERVED,
+                user = workingHourUsers[2],
+                room = mci1_301,
+                description = "Client Presentation"
+            )
+            addSeedBooking(
+                date = date,
+                slot = 4, // 16:00
+                durationHours = 1,
+                status = BookingStatus.RESERVED,
+                user = workingHourUsers[3],
+                room = mci5_185,
+                description = "Wrap-up"
+            )
         }
 
         // --- Searched Items Seeding ---

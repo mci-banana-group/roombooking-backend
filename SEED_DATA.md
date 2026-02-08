@@ -2,14 +2,15 @@
 
 This document describes the default seed data created by `seedData()` in `src/main/kotlin/plugins/Seeding.kt`.
 
+
 ## Accounts (all passwords are `password`)
 - admin@mci.edu (Admin, Staff)
+- student@mci.edu (User, Student)
 - sara.staff@mci.edu (User, Staff)
 - milan.staff@mci.edu (User, Staff)
 - lecturer@mci.edu (User, Lecturer)
 - mia.lecturer@mci.edu (User, Lecturer)
 - david.lecturer@mci.edu (User, Lecturer)
-- lena.student@mci.edu (User, Student)
 - tom.student@mci.edu (User, Student)
 - nina.student@mci.edu (User, Student)
 - armin.student@mci.edu (User, Student)
