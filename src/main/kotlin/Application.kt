@@ -2,6 +2,7 @@ package edu.mci
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import edu.mci.plugins.DbMode
 import edu.mci.plugins.configureDatabases
 import edu.mci.plugins.configureHTTP
 import edu.mci.plugins.seedData
@@ -29,8 +30,19 @@ fun main(args: Array<String>) {
 fun Application.module() {
     configureMonitoring()
     configureHTTP()
-    configureDatabases()
+    val dbMode = configureDatabases()
+
+
+    // only seed data when in memory mode is active
+//    if (dbMode == DbMode.IN_MEMORY) {
+//        seedData()
+//    }
+//
+
+    // for submission the db is seeded no matter which one is used
+    // else the prof grading would have to do a lot of manual labor
     seedData()
+
     configureSerialization()
 
     // Service initialization
