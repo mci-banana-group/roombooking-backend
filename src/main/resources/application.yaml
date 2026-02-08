@@ -8,7 +8,7 @@ ktor:
 
 jwt:
   secret: ${JWT_SECRET:verysecret}
-  issuer: ${JWT_ISSUER:https://roombooking-backend-l7kv.onrender.com}
+  issuer: ${JWT_ISSUER:http://localhost:8080}
   audience: ${JWT_AUDIENCE:roombooking-clients}
   realm: "Access to room booking"
 

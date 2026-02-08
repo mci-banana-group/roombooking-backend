@@ -49,7 +49,7 @@ Defaults live in `src/main/resources/application.yaml`. Override with env vars:
 | `DB_PASSWORD`     | `password`                                      | DB password                    |
 | `DB_DRIVER`       | `org.postgresql.Driver`                         | JDBC driver                    |
 | `JWT_SECRET`      | `verysecret`                                    | JWT signing secret             |
-| `JWT_ISSUER`      | `https://roombooking-backend-l7kv.onrender.com` | JWT issuer                     |
+| `JWT_ISSUER`      | `http://localhost:8080`                         | JWT issuer                     |
 | `JWT_AUDIENCE`    | `roombooking-clients`                           | JWT audience                   |
 | `MQTT_BROKER_URL` | `tcp://localhost:1883`                          | MQTT broker URL                |
 | `MQTT_CLIENT_ID`  | `RoomBookingBackend`                            | MQTT client ID                 |
