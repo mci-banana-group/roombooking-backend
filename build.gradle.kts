@@ -27,7 +27,7 @@ ktor {
             summary =
                 "IMPORTANT: Timestamps start/end are in Strings in ISO-8601: 2026-01-14T12:34:56Z --- !they aren't objects! it's just wrongly parsed by the open api generator"
             description =
-                "Authentication: All protected endpoints require a JWT Bearer token in the Authorization header. 1. Login at /auth/login. 2. Use token as Bearer in header. Base URL: https://roombooking-backend-l7kv.onrender.com"
+                "Authentication: All protected endpoints require a JWT Bearer token in the Authorization header. 1. Login at /auth/login. 2. Use token as Bearer in header. Base URL: http://localhost:8080"
             license = "Apache/1.0"
 
             // Location of the generated specification (defaults to openapi/generated.json)
