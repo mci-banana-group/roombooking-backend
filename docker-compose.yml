@@ -6,12 +6,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mqtt:
+        condition: service_started
     environment:
       DB_MODE: postgres
       DB_URL: jdbc:postgresql://postgres:5432/roombooking
       DB_USER: admin
       DB_PASSWORD: password
       DB_DRIVER: org.postgresql.Driver
+      MQTT_BROKER_URL: tcp://mqtt:1883
     ports:
       - "8080:8080"
 
@@ -31,6 +34,16 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  mqtt:
+    image: eclipse-mosquitto
+    container_name: roombooking-mqtt
+    ports:
+      - "1884:1883"
+    volumes:
+      - ./docker/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
 
   pgadmin:
     image: dpage/pgadmin4:8
@@ -52,3 +65,5 @@ services:
 volumes:
   postgres_data:
   pgadmin_data:
+  mosquitto_data:
+  mosquitto_log:

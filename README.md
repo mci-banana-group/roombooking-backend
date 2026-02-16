@@ -84,17 +84,57 @@ Swagger UI is available at:
 - `http://localhost:8080/swagger`
 
 ## MQTT Integration
-The service publishes room check-in codes to:
-- Topic: `room/{roomId}/code`
-- Payload: 4-digit code (string)
-- QoS: 1
-- Retained: true
+The backend integrates with an MQTT broker to publish room updates and receive commands.
 
-Local broker example:
-```bash
-brew install mosquitto && mosquitto
-mosquitto_sub -t "room/+/code" -v
-```
+### Running with Docker (Recommended)
+When running via `docker-compose up`, an Eclipse Mosquitto broker is automatically started.
+
+**Connection Details:**
+- **From Host (Your Machine):** `tcp://localhost:1883`
+- **From Backend Container:** `tcp://mqtt:1883`
+- **Authentication:** None (Anonymous access enabled)
+
+**Using MQTT Explorer:**
+Connect to `localhost` on port `1883`.
+
+### Using an External Broker
+To use a different MQTT broker (e.g., a cloud broker or a standalone local instance), override the `MQTT_BROKER_URL` environment variable.
+
+### Topics and Payloads
+
+#### Room Check-in Code
+- **Topic:** `room/{roomId}/code`
+- **Payload:** 4-digit code (string)
+- **QoS:** 1
+- **Retained:** true
+- **Description:** The correct check-in code for the current booking. The room display should subscribe to this to know the valid code.
+
+#### Door Control
+- **Topic:** `room/{roomId}/door`
+- **Payload:** `UNLOCK` | `LOCK`
+- **QoS:** 1
+- **Retained:** false
+- **Description:** 
+  - `UNLOCK`: Sent when a user successfully checks in.
+  - `LOCK`: Sent when a booking ends.
+
+#### Lighting Control
+- **Topic:** `room/{roomId}/light`
+- **Payload:** `ON` | `OFF`
+- **QoS:** 1
+- **Retained:** false
+- **Description:**
+  - `ON`: Sent when a user successfully checks in.
+  - `OFF`: Sent when a booking ends.
+
+#### HVAC Control
+- **Topic:** `room/{roomId}/hvac`
+- **Payload:** `ON` | `OFF`
+- **QoS:** 1
+- **Retained:** false
+- **Description:**
+  - `ON`: Sent when a user successfully checks in.
+  - `OFF`: Sent when a booking ends.
 
 ## AI Disclosure
 AI assistance was used to generate `README.md`, `SEED_DATA.md`, `src/main/kotlin/plugins/Seeding.kt`,
